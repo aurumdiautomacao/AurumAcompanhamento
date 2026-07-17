@@ -72,13 +72,13 @@ export default function Dashboard() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Buscar por título ou fonte..."
-              className="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
             />
           </div>
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
           >
             <option value="all">Todos os status</option>
             <option value="pendente">Pendente</option>
@@ -92,7 +92,7 @@ export default function Dashboard() {
       <Card className="overflow-hidden">
         {loading ? (
           <div className="flex justify-center py-16">
-            <Spinner className="text-indigo-600" />
+            <Spinner className="text-brand-600" />
           </div>
         ) : error ? (
           <ErrorState message={`Erro ao carregar: ${error}`} />
@@ -134,7 +134,7 @@ export default function Dashboard() {
                         href={n.url_fonte}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex items-center gap-1 text-indigo-600 dark:text-indigo-400 hover:text-indigo-700"
+                        className="inline-flex items-center gap-1 text-brand-600 dark:text-brand-400 hover:text-brand-700"
                       >
                         Abrir <ExternalLink size={14} />
                       </a>

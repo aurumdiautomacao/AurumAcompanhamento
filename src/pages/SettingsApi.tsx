@@ -138,7 +138,7 @@ export default function SettingsApi() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="p-6">
           <div className="flex items-center gap-2 mb-1">
-            <Key size={18} className="text-indigo-600 dark:text-indigo-400" />
+            <Key size={18} className="text-brand-600 dark:text-brand-400" />
             <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">
               Token da API OpenAI
             </h2>
@@ -159,7 +159,7 @@ export default function SettingsApi() {
                   value={token}
                   onChange={(e) => setToken(e.target.value)}
                   placeholder="sk-..."
-                  className="w-full pl-3 pr-10 py-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full pl-3 pr-10 py-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                 />
                 <button
                   type="button"
@@ -187,7 +187,7 @@ export default function SettingsApi() {
             <button
               type="submit"
               disabled={saving}
-              className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 rounded-lg"
+              className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-brand-600 hover:bg-brand-700 disabled:opacity-60 rounded-lg"
             >
               {saving ? <Spinner /> : <Save size={16} />}
               Salvar token
@@ -212,7 +212,7 @@ export default function SettingsApi() {
             label="Pico diário"
             value={`$ ${peakCost.toFixed(2)}`}
             icon={TrendingUp}
-            accent="bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-300"
+            accent="bg-brand-50 text-brand-600 dark:bg-brand-950/40 dark:text-brand-300"
           />
         </div>
       </div>
@@ -220,7 +220,7 @@ export default function SettingsApi() {
       <Card className="p-6 mt-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
           <div className="flex items-center gap-2">
-            <Sparkles size={18} className="text-indigo-600 dark:text-indigo-400" />
+            <Sparkles size={18} className="text-brand-600 dark:text-brand-400" />
             <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">
               Consumo diário (mês atual · {usage?.currency ?? 'USD'})
             </h2>
@@ -244,7 +244,7 @@ export default function SettingsApi() {
 
         {loadingUsage ? (
           <div className="flex justify-center py-16">
-            <Spinner className="text-indigo-600" />
+            <Spinner className="text-brand-600" />
           </div>
         ) : daily.length === 0 && !usageError ? (
           <div className="text-center py-12 text-slate-400 dark:text-slate-500 text-sm">
@@ -266,7 +266,7 @@ export default function SettingsApi() {
                     </div>
                     <div className="w-full flex-1 flex items-end">
                       <div
-                        className="w-full rounded-t-md bg-gradient-to-t from-indigo-600 to-indigo-400 hover:from-indigo-700 hover:to-indigo-500 transition-all"
+                        className="w-full rounded-t-md bg-gradient-to-t from-brand-600 to-brand-400 hover:from-brand-700 hover:to-brand-500 transition-all"
                         style={{ height: `${heightPct}%` }}
                       />
                     </div>

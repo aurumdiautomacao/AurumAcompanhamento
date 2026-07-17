@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { Badge } from './ui';
 
 const navItems = [
   { to: '/', label: 'Central de Notícias', icon: Newspaper, end: true },
@@ -23,7 +24,7 @@ const navItems = [
 ];
 
 export default function Layout({ children }: { children: ReactNode }) {
-  const { user, signOut } = useAuth();
+  const { user, profile, signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -42,10 +43,10 @@ export default function Layout({ children }: { children: ReactNode }) {
         }`}
       >
         <div className="h-16 flex items-center gap-2 px-5 border-b border-slate-800">
-          <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center">
+          <div className="w-8 h-8 rounded-lg bg-brand-600 flex items-center justify-center">
             <Newspaper className="text-white" size={18} />
           </div>
-          <span className="text-lg font-semibold text-white">TrendHub</span>
+          <span className="text-lg font-semibold text-white">AURUM</span>
         </div>
 
         <nav className="flex-1 px-3 py-4 space-y-1">
@@ -60,7 +61,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                 className={({ isActive }) =>
                   `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                     isActive
-                      ? 'bg-indigo-600 text-white'
+                      ? 'bg-brand-600 text-white'
                       : 'text-slate-300 hover:bg-slate-800 hover:text-white'
                   }`
                 }
@@ -81,7 +82,7 @@ export default function Layout({ children }: { children: ReactNode }) {
             {theme === 'dark' ? 'Tema claro' : 'Tema escuro'}
           </button>
           <div className="px-3 py-2 text-xs text-slate-500">
-            © {new Date().getFullYear()} TrendHub
+            © {new Date().getFullYear()} AURUM
           </div>
         </div>
       </aside>
@@ -122,12 +123,15 @@ export default function Layout({ children }: { children: ReactNode }) {
                 onClick={() => setMenuOpen((v) => !v)}
                 className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               >
-                <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-200 flex items-center justify-center text-sm font-semibold">
+                <div className="w-8 h-8 rounded-full bg-brand-100 text-brand-700 dark:bg-brand-900 dark:text-brand-200 flex items-center justify-center text-sm font-semibold">
                   {(user?.email ?? '?').charAt(0).toUpperCase()}
                 </div>
                 <div className="hidden sm:block text-left">
                   <div className="text-sm font-medium text-slate-800 dark:text-slate-100 leading-tight truncate max-w-[180px]">
                     {user?.email}
+                  </div>
+                  <div className="text-xs text-slate-400 leading-tight">
+                    {profile?.role ?? 'viewer'}
                   </div>
                 </div>
                 <ChevronDown size={16} className="text-slate-400" />
@@ -143,6 +147,9 @@ export default function Layout({ children }: { children: ReactNode }) {
                     <div className="px-4 py-2 border-b border-slate-100 dark:border-slate-800">
                       <div className="text-sm font-medium text-slate-800 dark:text-slate-100 truncate">
                         {user?.email}
+                      </div>
+                      <div className="mt-1">
+                        <Badge status={profile?.role ?? 'viewer'} />
                       </div>
                     </div>
                     <button

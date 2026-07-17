@@ -1,56 +1,63 @@
-import { useEffect, useState } from 'react';
-import { UserPlus, Search, RefreshCw, Pencil, Ban, ShieldCheck, Info } from 'lucide-react';
-import { supabase, type FonteNoticia, type BaseDeConhecimento } from '../lib/supabaseClient';
+import { useEffect, useState, type FormEvent } from 'react';
+import {
+  UserPlus,
+  Search,
+  RefreshCw,
+  Pencil,
+  Ban,
+  ShieldCheck,
+  Mail,
+  Lock,
+  AlertCircle,
+  CheckCircle2,
+  X,
+} from 'lucide-react';
+import { supabase, type Profile } from '../lib/supabaseClient';
 import { useAuth } from '../context/AuthContext';
-import { Badge, Card, EmptyState, ErrorState, PageHeader, Spinner } from '../components/ui';
+import {
+  Badge,
+  Card,
+  EmptyState,
+  ErrorState,
+  PageHeader,
+  Spinner,
+} from '../components/ui';
 
-type AdminUser = {
-  id: string;
-  email: string | undefined;
-  createdAt: string | undefined;
-};
+const CREATE_USER_PATH = '/functions/v1/create_user';
 
 export default function UserManagement() {
-  const { user } = useAuth();
-  const [fontes, setFontes] = useState<FonteNoticia[]>([]);
-  const [bases, setBases] = useState<BaseDeConhecimento[]>([]);
+  const { profile: currentUser } = useAuth();
+  const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+  const [showCreate, setShowCreate] = useState(false);
 
   async function load() {
     setLoading(true);
     setError(null);
-    const [fontesRes, basesRes] = await Promise.all([
-      supabase
-        .from('fontes_noticias')
-        .select('id, nome, url, ativo, data_cadastro, tipo_coleta')
-        .order('data_cadastro', { ascending: false }),
-      supabase
-        .from('base_de_conhecimento')
-        .select('id, nome_cliente, tom_de_voz, publico_alvo, regras_extras, created_at')
-        .order('created_at', { ascending: false }),
-    ]);
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, email, role, created_at')
+      .order('created_at', { ascending: false });
     setLoading(false);
-    if (fontesRes.error || basesRes.error) {
-      setError(fontesRes.error?.message ?? basesRes.error?.message ?? 'Erro ao carregar');
+    if (error) {
+      setError(error.message);
+      setProfiles([]);
       return;
     }
-    setFontes((fontesRes.data as FonteNoticia[]) ?? []);
-    setBases((basesRes.data as BaseDeConhecimento[]) ?? []);
+    setProfiles((data as Profile[]) ?? []);
   }
 
   useEffect(() => {
     load();
   }, []);
 
-  const adminUsers: AdminUser[] = user
-    ? [{ id: user.id, email: user.email, createdAt: user.created_at }]
-    : [];
-
-  const filteredUsers = adminUsers.filter((u) =>
-    (u.email ?? '').toLowerCase().includes(search.toLowerCase()),
+  const filtered = profiles.filter((p) =>
+    (p.email ?? '').toLowerCase().includes(search.toLowerCase()),
   );
+
+  const isAdmin = currentUser?.role === 'admin';
 
   return (
     <div>
@@ -67,22 +74,18 @@ export default function UserManagement() {
               {loading ? <Spinner /> : <RefreshCw size={16} />}
               Atualizar
             </button>
-            <button className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg">
-              <UserPlus size={16} />
-              Novo usuário
-            </button>
+            {isAdmin && (
+              <button
+                onClick={() => setShowCreate(true)}
+                className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-brand-600 hover:bg-brand-700 rounded-lg"
+              >
+                <UserPlus size={16} />
+                Novo usuário
+              </button>
+            )}
           </div>
         }
       />
-
-      <div className="mb-6 flex items-start gap-2 text-sm text-blue-800 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900 rounded-lg px-3 py-2">
-        <Info size={16} className="mt-0.5 shrink-0" />
-        <span>
-          Este projeto não possui uma tabela <code>profiles</code>. A lista abaixo mostra o
-          usuário autenticado atual (vindo do Supabase Auth). Para listar todos os usuários,
-          crie uma tabela <code>profiles</code> com RLS e faça o insert via trigger.
-        </span>
-      </div>
 
       <Card className="mb-6 p-4">
         <div className="relative">
@@ -94,16 +97,22 @@ export default function UserManagement() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar por e-mail..."
-            className="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            className="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
           />
         </div>
       </Card>
 
-      <Card className="overflow-hidden mb-8">
+      <Card className="overflow-hidden">
         <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800 text-sm font-medium text-slate-700 dark:text-slate-200">
-          Usuários autenticados
+          Usuários ({profiles.length})
         </div>
-        {filteredUsers.length === 0 ? (
+        {loading ? (
+          <div className="flex justify-center py-12">
+            <Spinner className="text-brand-600" />
+          </div>
+        ) : error ? (
+          <ErrorState message={error} />
+        ) : filtered.length === 0 ? (
           <EmptyState message="Nenhum usuário encontrado." />
         ) : (
           <div className="overflow-x-auto">
@@ -117,36 +126,39 @@ export default function UserManagement() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                {filteredUsers.map((u) => (
+                {filtered.map((p) => (
                   <tr
-                    key={u.id}
+                    key={p.id}
                     className="hover:bg-slate-50 dark:hover:bg-slate-800/40"
                   >
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-200 flex items-center justify-center text-sm font-semibold">
-                          {(u.email ?? '?').charAt(0).toUpperCase()}
+                        <div className="w-9 h-9 rounded-full bg-brand-100 text-brand-700 dark:bg-brand-900 dark:text-brand-200 flex items-center justify-center text-sm font-semibold">
+                          {(p.email ?? '?').charAt(0).toUpperCase()}
                         </div>
                         <div>
                           <div className="font-medium text-slate-800 dark:text-slate-100">
-                            {u.email ?? '—'}
+                            {p.email ?? '—'}
                           </div>
                           <div className="text-xs text-slate-400 dark:text-slate-500">
-                            ID: {u.id.slice(0, 8)}…
+                            ID: {p.id.slice(0, 8)}…
                           </div>
                         </div>
                       </div>
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                        <Badge status="admin" />
-                        <ShieldCheck size={14} className="text-indigo-500" />
+                        <Badge status={p.role} />
+                        {p.role === 'admin' && (
+                          <ShieldCheck
+                            size={14}
+                            className="text-brand-500"
+                          />
+                        )}
                       </div>
                     </td>
                     <td className="px-4 py-3 text-slate-500 dark:text-slate-400 whitespace-nowrap">
-                      {u.createdAt
-                        ? new Date(u.createdAt).toLocaleDateString('pt-BR')
-                        : '—'}
+                      {new Date(p.created_at).toLocaleDateString('pt-BR')}
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="inline-flex items-center gap-2">
@@ -174,99 +186,176 @@ export default function UserManagement() {
         )}
       </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="overflow-hidden">
-          <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800 text-sm font-medium text-slate-700 dark:text-slate-200">
-            Fontes de Notícias ({fontes.length})
-          </div>
-          {loading ? (
-            <div className="flex justify-center py-8">
-              <Spinner className="text-indigo-600" />
-            </div>
-          ) : error ? (
-            <ErrorState message={error} />
-          ) : fontes.length === 0 ? (
-            <EmptyState message="Nenhuma fonte." />
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wide">
-                  <tr>
-                    <th className="text-left font-medium px-4 py-3">Nome</th>
-                    <th className="text-left font-medium px-4 py-3">Tipo</th>
-                    <th className="text-left font-medium px-4 py-3">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {fontes.map((f) => (
-                    <tr
-                      key={f.id}
-                      className="hover:bg-slate-50 dark:hover:bg-slate-800/40"
-                    >
-                      <td className="px-4 py-3">
-                        <div className="font-medium text-slate-800 dark:text-slate-100">
-                          {f.nome}
-                        </div>
-                        <a
-                          href={f.url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline truncate block max-w-xs"
-                        >
-                          {f.url}
-                        </a>
-                      </td>
-                      <td className="px-4 py-3 text-slate-600 dark:text-slate-300">
-                        {f.tipo_coleta ?? '—'}
-                      </td>
-                      <td className="px-4 py-3">
-                        <Badge status={f.ativo ? 'ativo' : 'inativo'} />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </Card>
-
-        <Card className="overflow-hidden">
-          <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800 text-sm font-medium text-slate-700 dark:text-slate-200">
-            Base de Conhecimento ({bases.length})
-          </div>
-          {loading ? (
-            <div className="flex justify-center py-8">
-              <Spinner className="text-indigo-600" />
-            </div>
-          ) : error ? (
-            <ErrorState message={error} />
-          ) : bases.length === 0 ? (
-            <EmptyState message="Nenhuma base." />
-          ) : (
-            <div className="divide-y divide-slate-100 dark:divide-slate-800">
-              {bases.map((b) => (
-                <div key={b.id} className="px-4 py-3">
-                  <div className="font-medium text-slate-800 dark:text-slate-100">
-                    {b.nome_cliente}
-                  </div>
-                  <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    Tom: {b.tom_de_voz} · Público: {b.publico_alvo}
-                  </div>
-                  {b.regras_extras && (
-                    <div className="text-xs text-slate-400 dark:text-slate-500 mt-1 line-clamp-2">
-                      {b.regras_extras}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </Card>
-      </div>
-
       <p className="text-xs text-slate-400 dark:text-slate-500 mt-3">
-        As ações de Editar e Desativar são ilustrativas neste MVP.
+        A criação de usuários é feita via Edge Function com service_role. O
+        perfil é criado automaticamente por trigger após o registro em
+        auth.users.
       </p>
+
+      {showCreate && isAdmin && (
+        <CreateUserModal
+          onClose={() => setShowCreate(false)}
+          onCreated={() => {
+            setShowCreate(false);
+            load();
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function CreateUserModal({
+  onClose,
+  onCreated,
+}: {
+  onClose: () => void;
+  onCreated: () => void;
+}) {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [role, setRole] = useState('viewer');
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    setError(null);
+    if (password.length < 6) {
+      setError('A senha deve ter ao menos 6 caracteres.');
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}${CREATE_USER_PATH}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+            Authorization: `Bearer ${sessionData.session?.access_token ?? ''}`,
+          },
+          body: JSON.stringify({
+            email: email.trim().toLowerCase(),
+            password,
+            role,
+          }),
+        },
+      );
+      const json = await res.json();
+      if (!res.ok || json.error) {
+        setError(json.error ?? `Erro ${res.status}`);
+        setSubmitting(false);
+        return;
+      }
+      setSuccess(true);
+      setTimeout(() => onCreated(), 900);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setError(`Falha: ${msg}`);
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
+      <Card className="w-full max-w-md p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">
+            Criar novo usuário
+          </h2>
+          <button
+            onClick={onClose}
+            className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400"
+            aria-label="Fechar"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-1.5">
+              E-mail
+            </label>
+            <div className="relative">
+              <Mail
+                size={16}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+              />
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full pl-9 pr-3 py-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                placeholder="novo@empresa.com"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-1.5">
+              Senha
+            </label>
+            <div className="relative">
+              <Lock
+                size={16}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+              />
+              <input
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full pl-9 pr-3 py-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                placeholder="••••••••"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-1.5">
+              Perfil
+            </label>
+            <select
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+              className="w-full px-3 py-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+            >
+              <option value="viewer">Viewer</option>
+              <option value="editor">Editor</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+
+          {error && (
+            <div className="flex items-start gap-2 text-sm text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 rounded-lg px-3 py-2">
+              <AlertCircle size={16} className="mt-0.5 shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          {success && (
+            <div className="flex items-start gap-2 text-sm text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900 rounded-lg px-3 py-2">
+              <CheckCircle2 size={16} className="mt-0.5 shrink-0" />
+              <span>Usuário criado com sucesso!</span>
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={submitting}
+            className="w-full flex items-center justify-center gap-2 bg-brand-600 hover:bg-brand-700 disabled:opacity-60 text-white font-medium py-2.5 rounded-lg transition-colors"
+          >
+            {submitting && <Spinner />}
+            Criar usuário
+          </button>
+        </form>
+      </Card>
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Newspaper, Mail, Lock, AlertCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Spinner } from '../components/ui';
@@ -29,7 +29,7 @@ export default function Login() {
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center px-4">
       <div className="mx-auto w-full max-w-md">
         <div className="flex items-center justify-center gap-2 mb-8">
-          <div className="w-10 h-10 rounded-lg bg-indigo-600 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-lg bg-brand-600 flex items-center justify-center">
             <Newspaper className="text-white" size={22} />
           </div>
           <span className="text-xl font-semibold text-slate-900">TrendHub</span>
@@ -56,7 +56,7 @@ export default function Login() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2.5 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full pl-9 pr-3 py-2.5 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                   placeholder="voce@empresa.com"
                 />
               </div>
@@ -76,7 +76,7 @@ export default function Login() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2.5 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full pl-9 pr-3 py-2.5 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                   placeholder="••••••••"
                 />
               </div>
@@ -92,26 +92,16 @@ export default function Login() {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white font-medium py-2.5 rounded-lg transition-colors"
+              className="w-full flex items-center justify-center gap-2 bg-brand-600 hover:bg-brand-700 disabled:opacity-60 text-white font-medium py-2.5 rounded-lg transition-colors"
             >
               {submitting && <Spinner />}
               Entrar
             </button>
           </form>
-
-          <p className="text-sm text-slate-500 text-center mt-6">
-            Não tem conta?{' '}
-            <Link
-              to="/register"
-              className="text-indigo-600 hover:text-indigo-700 font-medium"
-            >
-              Criar conta
-            </Link>
-          </p>
         </div>
 
         <p className="text-center text-xs text-slate-400 mt-6">
-          TrendHub · Plataforma de gestão de conteúdo corporativo
+          AURUM · Plataforma de gestão de conteúdo corporativo
         </p>
       </div>
     </div>

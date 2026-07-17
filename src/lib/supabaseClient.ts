@@ -48,11 +48,19 @@ export type NoticiaBruta = {
   nome_fonte: string | null;
 };
 
+export type TopicoEstrategico = {
+  tema_macro: string;
+  pontuacao_relevancia: number;
+  justificativa_pontuacao?: string;
+  sintese?: string;
+};
+
 export type ConteudoGerado = {
   id: number;
   relatorio_tendencias: string;
   posts_instagram: string[] | string;
   posts_linkedin: string[] | string;
+  topicos_estrategicos?: TopicoEstrategico[] | string | null;
   created_at: string;
 };
 
@@ -91,6 +99,13 @@ export type ApiSettings = {
   updated_at: string;
 };
 
+export type Profile = {
+  id: string;
+  email: string | null;
+  role: string;
+  created_at: string;
+};
+
 // Normalize a jsonb posts field that may be string[] or a JSON-encoded string.
 export function normalizePosts(raw: string[] | string | null | undefined): string[] {
   if (!raw) return [];
@@ -100,6 +115,33 @@ export function normalizePosts(raw: string[] | string | null | undefined): strin
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed)) {
         return parsed.filter((p): p is string => typeof p === 'string');
+      }
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
+
+// Normalize the topicos_estrategicos jsonb field into a sorted TopicoEstrategico[].
+// Handles: TopicoEstrategico[], JSON-encoded string, empty string, null.
+export function normalizeTopicos(
+  raw: TopicoEstrategico[] | string | null | undefined,
+): TopicoEstrategico[] {
+  if (!raw) return [];
+  if (Array.isArray(raw)) {
+    return raw.filter(
+      (t) => t && typeof t.tema_macro === 'string',
+    ) as TopicoEstrategico[];
+  }
+  if (typeof raw === 'string') {
+    if (raw.trim() === '' || raw.trim() === '""') return [];
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        return parsed.filter(
+          (t) => t && typeof t.tema_macro === 'string',
+        ) as TopicoEstrategico[];
       }
     } catch {
       return [];
