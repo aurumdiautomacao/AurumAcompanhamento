@@ -38,15 +38,15 @@ export default function Layout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex">
       <aside
-        className={`fixed lg:static inset-y-0 left-0 z-40 w-64 bg-slate-900 text-slate-300 flex flex-col transform transition-transform duration-200 ${
+        className={`fixed lg:static inset-y-0 left-0 z-40 w-64 bg-brand-950 text-brand-100 flex flex-col transform transition-transform duration-200 ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
-        <div className="h-16 flex items-center gap-2 px-5 border-b border-slate-800">
-          <div className="w-8 h-8 rounded-lg bg-brand-600 flex items-center justify-center">
-            <Newspaper className="text-white" size={18} />
+        <div className="h-16 flex items-center gap-2 px-5 border-b border-brand-900">
+          <div className="w-8 h-8 rounded-lg bg-gold-500 flex items-center justify-center">
+            <Newspaper className="text-brand-950" size={18} />
           </div>
-          <span className="text-lg font-semibold text-white">AURUM</span>
+          <span className="text-lg font-semibold text-white">AURUM <span className="text-gold-400 font-normal">DI</span></span>
         </div>
 
         <nav className="flex-1 px-3 py-4 space-y-1">
@@ -61,8 +61,8 @@ export default function Layout({ children }: { children: ReactNode }) {
                 className={({ isActive }) =>
                   `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                     isActive
-                      ? 'bg-brand-600 text-white'
-                      : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                      ? 'bg-gold-500 text-brand-950'
+                      : 'text-brand-100 hover:bg-brand-800 hover:text-white'
                   }`
                 }
               >
@@ -73,16 +73,16 @@ export default function Layout({ children }: { children: ReactNode }) {
           })}
         </nav>
 
-        <div className="p-3 border-t border-slate-800">
+        <div className="p-3 border-t border-brand-900">
           <button
             onClick={toggleTheme}
-            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-brand-100 hover:bg-brand-800 hover:text-white transition-colors"
           >
             {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
             {theme === 'dark' ? 'Tema claro' : 'Tema escuro'}
           </button>
-          <div className="px-3 py-2 text-xs text-slate-500">
-            © {new Date().getFullYear()} AURUM
+          <div className="px-3 py-2 text-xs text-brand-400">
+            © {new Date().getFullYear()} Aurum DI
           </div>
         </div>
       </aside>
@@ -105,7 +105,7 @@ export default function Layout({ children }: { children: ReactNode }) {
           </button>
 
           <div className="hidden lg:block text-sm font-medium text-slate-500 dark:text-slate-400">
-            Painel de gestão de conteúdo
+            Inteligência de mercado & briefings
           </div>
 
           <div className="flex items-center gap-2">
@@ -123,7 +123,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                 onClick={() => setMenuOpen((v) => !v)}
                 className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               >
-                <div className="w-8 h-8 rounded-full bg-brand-100 text-brand-700 dark:bg-brand-900 dark:text-brand-200 flex items-center justify-center text-sm font-semibold">
+                <div className="w-8 h-8 rounded-full bg-gold-100 text-gold-800 dark:bg-gold-900 dark:text-gold-200 flex items-center justify-center text-sm font-semibold">
                   {(user?.email ?? '?').charAt(0).toUpperCase()}
                 </div>
                 <div className="hidden sm:block text-left">

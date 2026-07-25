@@ -55,12 +55,18 @@ export type TopicoEstrategico = {
   sintese?: string;
 };
 
+export type SugestaoPauta = {
+  titulo: string;
+  contexto: string;
+};
+
 export type ConteudoGerado = {
   id: number;
   relatorio_tendencias: string;
-  posts_instagram: string[] | string;
-  posts_linkedin: string[] | string;
+  posts_instagram?: string[] | string;
+  posts_linkedin?: string[] | string;
   topicos_estrategicos?: TopicoEstrategico[] | string | null;
+  sugestoes_pautas?: SugestaoPauta[] | string | null;
   created_at: string;
 };
 
@@ -68,9 +74,16 @@ export type PostGerado = {
   id: number;
   conteudo_gerado_id: number | null;
   plataforma: string;
-  conteudo: string;
-  status: string | null;
-  created_at: string | null;
+  formato?: string | null;
+  headline?: string | null;
+  subtitulo?: string | null;
+  texto_apoio?: string | null;
+  cta?: string | null;
+  legenda?: string | null;
+  hashtags?: string | null;
+  conteudo?: string;
+  status?: string | null;
+  created_at?: string | null;
 };
 
 export type FonteNoticia = {

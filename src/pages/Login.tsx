@@ -26,19 +26,23 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-center px-4">
-      <div className="mx-auto w-full max-w-md">
-        <div className="flex items-center justify-center gap-2 mb-8">
-          <div className="w-10 h-10 rounded-lg bg-brand-600 flex items-center justify-center">
-            <Newspaper className="text-white" size={22} />
+    <div className="min-h-screen bg-brand-950 flex flex-col justify-center px-4 relative overflow-hidden">
+      <div className="absolute inset-0 opacity-10 pointer-events-none">
+        <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-gold-500 blur-3xl" />
+        <div className="absolute -bottom-32 -left-32 w-96 h-96 rounded-full bg-brand-400 blur-3xl" />
+      </div>
+      <div className="mx-auto w-full max-w-md relative">
+        <div className="flex items-center justify-center gap-2.5 mb-8">
+          <div className="w-11 h-11 rounded-xl bg-gold-500 flex items-center justify-center shadow-lg shadow-gold-900/30">
+            <Newspaper className="text-brand-950" size={24} />
           </div>
-          <span className="text-xl font-semibold text-slate-900">TrendHub</span>
+          <span className="text-2xl font-semibold text-white">Aurum <span className="text-gold-400 font-normal">DI</span></span>
         </div>
 
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 sm:p-8">
-          <h1 className="text-xl font-semibold text-slate-900">Entrar na plataforma</h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Acesse o painel de gestão de conteúdo e tendências.
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl p-6 sm:p-8">
+          <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100">Entrar na plataforma</h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+            Acesse o painel de inteligência de mercado e briefings.
           </p>
 
           <form onSubmit={handleSubmit} className="mt-6 space-y-4">
@@ -100,8 +104,8 @@ export default function Login() {
           </form>
         </div>
 
-        <p className="text-center text-xs text-slate-400 mt-6">
-          AURUM · Plataforma de gestão de conteúdo corporativo
+        <p className="text-center text-xs text-brand-300 mt-6">
+          Aurum DI · Inteligência de mercado e briefings de design
         </p>
       </div>
     </div>
