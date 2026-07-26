@@ -16,6 +16,11 @@ import {
   Clock,
   Check,
   CircleDashed,
+  X,
+  Maximize2,
+  Type,
+  AlignLeft,
+  Megaphone,
 } from 'lucide-react';
 import {
   supabase,
@@ -39,6 +44,7 @@ export default function ApprovalCenter() {
   const [errorPosts, setErrorPosts] = useState<string | null>(null);
   const [approvingId, setApprovingId] = useState<number | null>(null);
   const [postTab, setPostTab] = useState<PostTab>('instagram');
+  const [detailPost, setDetailPost] = useState<PostGerado | null>(null);
 
   async function loadRelatorios() {
     setLoadingRel(true);
@@ -281,6 +287,7 @@ export default function ApprovalCenter() {
                           post={p}
                           approvingId={approvingId}
                           onApprove={approve}
+                          onOpenDetail={() => setDetailPost(p)}
                         />
                       ))}
                     </div>
@@ -291,6 +298,15 @@ export default function ApprovalCenter() {
           )}
         </div>
       </div>
+
+      {detailPost && (
+        <PostDetailModal
+          post={detailPost}
+          approvingId={approvingId}
+          onApprove={approve}
+          onClose={() => setDetailPost(null)}
+        />
+      )}
     </div>
   );
 }
@@ -408,10 +424,12 @@ function BriefingApprovalCard({
   post,
   approvingId,
   onApprove,
+  onOpenDetail,
 }: {
   post: PostGerado;
   approvingId: number | null;
   onApprove: (id: number) => void;
+  onOpenDetail: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const isInstagram = canonicalPlataforma(post.plataforma) === 'instagram';
@@ -423,7 +441,10 @@ function BriefingApprovalCard({
 
   return (
     <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-soft overflow-hidden flex flex-col">
-      <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800">
+      <button
+        onClick={onOpenDetail}
+        className="text-left px-4 py-3 border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors group"
+      >
         <div className="flex items-center justify-between gap-2 mb-2">
           <div className="flex items-center gap-1.5">
             {isInstagram ? (
@@ -435,11 +456,14 @@ function BriefingApprovalCard({
               {isInstagram ? 'Instagram' : 'LinkedIn'}
             </span>
           </div>
-          {post.formato && (
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border bg-brand-50 text-brand-700 border-brand-200 dark:bg-brand-950/40 dark:text-brand-300 dark:border-brand-900">
-              {post.formato}
-            </span>
-          )}
+          <div className="flex items-center gap-1.5">
+            {post.formato && (
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border bg-brand-50 text-brand-700 border-brand-200 dark:bg-brand-950/40 dark:text-brand-300 dark:border-brand-900">
+                {post.formato}
+              </span>
+            )}
+            <Maximize2 size={13} className="text-slate-300 dark:text-slate-600 group-hover:text-brand-500 transition-colors" />
+          </div>
         </div>
 
         {post.headline && (
@@ -452,7 +476,7 @@ function BriefingApprovalCard({
             {post.subtitulo}
           </p>
         )}
-      </div>
+      </button>
 
       <div className="px-4 py-3 flex-1 flex flex-col gap-2.5">
         {post.texto_apoio && (
@@ -520,6 +544,196 @@ function BriefingApprovalCard({
               Aprovar
             </button>
           )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PostDetailModal({
+  post,
+  approvingId,
+  onApprove,
+  onClose,
+}: {
+  post: PostGerado;
+  approvingId: number | null;
+  onApprove: (id: number) => void;
+  onClose: () => void;
+}) {
+  const isInstagram = canonicalPlataforma(post.plataforma) === 'instagram';
+  const platformAccent = isInstagram
+    ? 'text-pink-600 dark:text-pink-400'
+    : 'text-sky-600 dark:text-sky-400';
+  const status = post.status ?? 'pendente';
+  const isApproved = status === 'aprovado';
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="sticky top-0 z-10 flex items-center justify-between gap-2 px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900">
+          <div className="flex items-center gap-2">
+            {isInstagram ? (
+              <Instagram size={18} className={platformAccent} />
+            ) : (
+              <Linkedin size={18} className={platformAccent} />
+            )}
+            <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+              {isInstagram ? 'Instagram' : 'LinkedIn'}
+              {post.formato && (
+                <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold border bg-brand-50 text-brand-700 border-brand-200 dark:bg-brand-950/40 dark:text-brand-300 dark:border-brand-900">
+                  {post.formato}
+                </span>
+              )}
+            </span>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="px-6 py-5 space-y-5">
+          {/* Headline */}
+          {post.headline && (
+            <div>
+              <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500 mb-1.5">
+                <Type size={12} />
+                Headline
+              </div>
+              <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 leading-tight">
+                {post.headline}
+              </h2>
+            </div>
+          )}
+
+          {/* Subtítulo */}
+          {post.subtitulo && (
+            <div>
+              <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500 mb-1.5">
+                <AlignLeft size={12} />
+                Subtítulo
+              </div>
+              <p className="text-base text-slate-700 dark:text-slate-200 leading-relaxed">
+                {post.subtitulo}
+              </p>
+            </div>
+          )}
+
+          {/* Texto de apoio */}
+          {post.texto_apoio && (
+            <div>
+              <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500 mb-1.5">
+                <AlignLeft size={12} />
+                Texto de apoio
+              </div>
+              <p className="text-sm text-slate-700 dark:text-slate-200 whitespace-pre-wrap leading-relaxed">
+                {post.texto_apoio}
+              </p>
+            </div>
+          )}
+
+          {/* CTA */}
+          {post.cta && (
+            <div>
+              <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500 mb-1.5">
+                <Megaphone size={12} />
+                CTA
+              </div>
+              <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-gold-50 dark:bg-gold-950/30 border border-gold-200 dark:border-gold-800">
+                <ArrowRight size={16} className="text-gold-600 dark:text-gold-400 shrink-0" />
+                <span className="text-sm font-semibold text-gold-800 dark:text-gold-200">
+                  {post.cta}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Legenda */}
+          {post.legenda && (
+            <div>
+              <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500 mb-1.5">
+                <Quote size={12} />
+                Legenda
+              </div>
+              <div className="rounded-lg bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 p-4">
+                <p className="text-sm text-slate-700 dark:text-slate-200 whitespace-pre-wrap leading-relaxed">
+                  {post.legenda}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Hashtags */}
+          {post.hashtags && (
+            <div>
+              <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500 mb-1.5">
+                <Hash size={12} />
+                Hashtags
+              </div>
+              <p className="text-sm text-brand-600 dark:text-brand-400 font-medium break-words leading-relaxed">
+                {post.hashtags}
+              </p>
+            </div>
+          )}
+
+          {/* Conteúdo legacy (if present) */}
+          {post.conteudo && (
+            <div>
+              <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500 mb-1.5">
+                <AlignLeft size={12} />
+                Conteúdo
+              </div>
+              <p className="text-sm text-slate-700 dark:text-slate-200 whitespace-pre-wrap leading-relaxed">
+                {post.conteudo}
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Footer - approval action */}
+        <div className="sticky bottom-0 flex items-center justify-between gap-2 px-6 py-4 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900">
+          <div className="flex items-center gap-2">
+            <Badge status={isApproved ? 'aprovado' : 'pendente'} />
+            {post.created_at && (
+              <span className="inline-flex items-center gap-1 text-xs text-slate-400 dark:text-slate-500">
+                <Calendar size={11} />
+                {new Date(post.created_at).toLocaleString('pt-BR')}
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={onClose}
+              className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800"
+            >
+              Fechar
+            </button>
+            {isApproved ? (
+              <span className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 rounded-lg">
+                <CheckCircle2 size={16} /> Aprovado
+              </span>
+            ) : (
+              <button
+                onClick={() => onApprove(post.id)}
+                disabled={approvingId === post.id}
+                className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg disabled:opacity-60 transition-colors"
+              >
+                {approvingId === post.id ? <Spinner /> : <CheckCircle2 size={16} />}
+                Aprovar post
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>
