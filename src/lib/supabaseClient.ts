@@ -46,6 +46,7 @@ export type NoticiaBruta = {
   data_coleta: string;
   status_processamento: string | null;
   nome_fonte: string | null;
+  categoria: string | null;
 };
 
 export type TopicoEstrategico = {

@@ -6,6 +6,7 @@ import Layout from './components/Layout';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import ApprovalCenter from './pages/ApprovalCenter';
+import FontesNoticias from './pages/FontesNoticias';
 import UserManagement from './pages/UserManagement';
 import SettingsApi from './pages/SettingsApi';
 
@@ -32,6 +33,16 @@ export default function App() {
                 <ProtectedRoute>
                   <Layout>
                     <ApprovalCenter />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/fontes"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <FontesNoticias />
                   </Layout>
                 </ProtectedRoute>
               }

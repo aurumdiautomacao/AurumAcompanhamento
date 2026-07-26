@@ -11,6 +11,7 @@ import {
   ChevronDown,
   Moon,
   Sun,
+  Rss,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -18,6 +19,7 @@ import { Badge } from './ui';
 
 const navItems = [
   { to: '/', label: 'Central de Notícias', icon: Newspaper, end: true },
+  { to: '/fontes', label: 'Fontes de Notícias', icon: Rss, end: false },
   { to: '/aprovacao', label: 'Central de Aprovação', icon: CheckSquare, end: false },
   { to: '/usuarios', label: 'Gestão de Usuários', icon: Users, end: false },
   { to: '/configuracoes', label: 'Configurações & API', icon: Settings, end: false },
