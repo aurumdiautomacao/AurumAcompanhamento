@@ -837,10 +837,17 @@ function TopicoCard({ topico }: { topico: TopicoEstrategico }) {
   const score = topico.pontuacao_relevancia ?? 0;
   const tier = impactTier(score);
   const cfg = tierConfig[tier];
-  const isRuido = tier === 'ruido';
+  const hasSintese = !!topico.sintese;
+  const hasJustificativa = !!topico.justificativa_pontuacao;
+  const isClickable = hasSintese || hasJustificativa;
 
   return (
-    <div className={`rounded-lg border ${cfg.card} p-3 transition-all`}>
+    <button
+      onClick={isClickable ? () => setExpanded((v) => !v) : undefined}
+      className={`w-full text-left rounded-lg border ${cfg.card} p-3 transition-all ${
+        isClickable ? 'cursor-pointer hover:shadow-md hover:border-slate-300 dark:hover:border-slate-700' : 'cursor-default'
+      }`}
+    >
       <div className="flex items-start justify-between gap-2 mb-2">
         <h3 className="text-[13px] font-semibold text-slate-900 dark:text-slate-100 leading-snug pr-1">
           {topico.tema_macro}
@@ -857,6 +864,11 @@ function TopicoCard({ topico }: { topico: TopicoEstrategico }) {
           >
             {score}
           </span>
+          {isClickable && (
+            <span className="text-slate-400 dark:text-slate-500 ml-0.5">
+              {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+            </span>
+          )}
         </div>
       </div>
 
@@ -867,36 +879,29 @@ function TopicoCard({ topico }: { topico: TopicoEstrategico }) {
         />
       </div>
 
-      {topico.justificativa_pontuacao && (
-        <p className={`text-[11px] ${cfg.accent} mb-2 italic leading-relaxed line-clamp-2`}>
+      {hasJustificativa && (
+        <p className={`text-[11px] ${cfg.accent} italic leading-relaxed ${expanded ? 'mb-3' : 'mb-0 line-clamp-2'}`}>
           {topico.justificativa_pontuacao}
         </p>
       )}
 
-      {isRuido && !expanded ? (
-        <button
-          onClick={() => setExpanded(true)}
-          className="text-[11px] text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 underline"
-        >
-          Ver síntese
-        </button>
-      ) : (
-        topico.sintese && (
-          <div>
-            {isRuido && (
-              <button
-                onClick={() => setExpanded(false)}
-                className="text-[11px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 underline mb-1.5"
-              >
-                Recolher
-              </button>
-            )}
-            <p className="text-[13px] text-slate-700 dark:text-slate-200 whitespace-pre-wrap leading-relaxed">
-              {topico.sintese}
-            </p>
+      {expanded && hasSintese && (
+        <div className={`mt-2 pt-2 ${hasJustificativa ? 'border-t border-slate-200/60 dark:border-slate-700/60' : ''}`}>
+          <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500 mb-1.5">
+            <AlignLeft size={11} />
+            Síntese
           </div>
-        )
+          <p className="text-[13px] text-slate-700 dark:text-slate-200 whitespace-pre-wrap leading-relaxed">
+            {topico.sintese}
+          </p>
+        </div>
       )}
-    </div>
+
+      {isClickable && !expanded && (
+        <div className="text-[11px] text-slate-400 dark:text-slate-500 mt-1.5">
+          Clique para ver a síntese completa
+        </div>
+      )}
+    </button>
   );
 }
