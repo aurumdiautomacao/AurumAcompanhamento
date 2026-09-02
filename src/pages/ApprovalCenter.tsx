@@ -21,6 +21,7 @@ import {
   Type,
   AlignLeft,
   Megaphone,
+  Pencil,
 } from 'lucide-react';
 import {
   supabase,
@@ -45,6 +46,50 @@ export default function ApprovalCenter() {
   const [approvingId, setApprovingId] = useState<number | null>(null);
   const [postTab, setPostTab] = useState<PostTab>('instagram');
   const [detailPost, setDetailPost] = useState<PostGerado | null>(null);
+  const [savedScoreKey, setSavedScoreKey] = useState<string | null>(null);
+  const [savingScoreKey, setSavingScoreKey] = useState<string | null>(null);
+
+  async function updateTopicoScore(conteudoId: number, topicoIndex: number, newScore: number) {
+    const clamped = Math.max(0, Math.min(10, newScore));
+    const key = `${conteudoId}-${topicoIndex}`;
+    const report = relatorios.find((r) => r.id === conteudoId);
+    if (!report) return;
+
+    const currentTopicos = normalizeTopicos(report.topicos_estrategicos);
+    const updatedTopicos = currentTopicos.map((t, i) =>
+      i === topicoIndex ? { ...t, pontuacao_relevancia: clamped } : t,
+    );
+
+    setRelatorios((prev) =>
+      prev.map((r) =>
+        r.id === conteudoId
+          ? { ...r, topicos_estrategicos: updatedTopicos }
+          : r,
+      ),
+    );
+
+    setSavingScoreKey(key);
+    const { error } = await supabase
+      .from('conteudo_gerado')
+      .update({ topicos_estrategicos: updatedTopicos })
+      .eq('id', conteudoId);
+    setSavingScoreKey(null);
+
+    if (error) {
+      setErrorRel(error.message);
+      setRelatorios((prev) =>
+        prev.map((r) =>
+          r.id === conteudoId
+            ? { ...r, topicos_estrategicos: currentTopicos }
+            : r,
+        ),
+      );
+      return;
+    }
+
+    setSavedScoreKey(key);
+    setTimeout(() => setSavedScoreKey((k) => (k === key ? null : k)), 1800);
+  }
 
   async function loadRelatorios() {
     setLoadingRel(true);
@@ -238,7 +283,15 @@ export default function ApprovalCenter() {
               <RelatorioCard texto={selected.relatorio_tendencias} createdAt={selected.created_at} />
 
               {/* Strategic topics - collapsible */}
-              {topicos.length > 0 && <RadarEstrategico topicos={topicos} />}
+              {topicos.length > 0 && (
+                <RadarEstrategico
+                  topicos={topicos}
+                  conteudoId={selected.id}
+                  onUpdateScore={updateTopicoScore}
+                  savingScoreKey={savingScoreKey}
+                  savedScoreKey={savedScoreKey}
+                />
+              )}
 
               {/* Related posts with tabs */}
               <Card className="overflow-hidden">
@@ -787,10 +840,23 @@ const tierConfig: Record<
   },
 };
 
-function RadarEstrategico({ topicos }: { topicos: TopicoEstrategico[] }) {
+function RadarEstrategico({
+  topicos,
+  conteudoId,
+  onUpdateScore,
+  savingScoreKey,
+  savedScoreKey,
+}: {
+  topicos: TopicoEstrategico[];
+  conteudoId: number;
+  onUpdateScore: (conteudoId: number, topicoIndex: number, newScore: number) => void;
+  savingScoreKey: string | null;
+  savedScoreKey: string | null;
+}) {
   const [open, setOpen] = useState(true);
-  const sorted = [...topicos].sort(
-    (a, b) => (b.pontuacao_relevancia ?? 0) - (a.pontuacao_relevancia ?? 0),
+  const indexed = topicos.map((t, originalIndex) => ({ topico: t, originalIndex }));
+  const sorted = [...indexed].sort(
+    (a, b) => (b.topico.pontuacao_relevancia ?? 0) - (a.topico.pontuacao_relevancia ?? 0),
   );
 
   return (
@@ -808,7 +874,7 @@ function RadarEstrategico({ topicos }: { topicos: TopicoEstrategico[] }) {
               Tópicos Estratégicos
             </h2>
             <p className="text-[11px] text-slate-500 dark:text-slate-400">
-              {topicos.length} tópicos clusterizados
+              {topicos.length} tópicos clusterizados · clique no lápis para calibrar a nota
             </p>
           </div>
         </div>
@@ -821,8 +887,16 @@ function RadarEstrategico({ topicos }: { topicos: TopicoEstrategico[] }) {
             <EmptyState message="Nenhum tópico estratégico gerado." />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {sorted.map((t, i) => (
-                <TopicoCard key={`${t.tema_macro}-${i}`} topico={t} />
+              {sorted.map(({ topico, originalIndex }) => (
+                <TopicoCard
+                  key={`${topico.tema_macro}-${originalIndex}`}
+                  topico={topico}
+                  conteudoId={conteudoId}
+                  topicoIndex={originalIndex}
+                  onUpdateScore={onUpdateScore}
+                  isSaving={savingScoreKey === `${conteudoId}-${originalIndex}`}
+                  justSaved={savedScoreKey === `${conteudoId}-${originalIndex}`}
+                />
               ))}
             </div>
           )}
@@ -832,8 +906,24 @@ function RadarEstrategico({ topicos }: { topicos: TopicoEstrategico[] }) {
   );
 }
 
-function TopicoCard({ topico }: { topico: TopicoEstrategico }) {
+function TopicoCard({
+  topico,
+  conteudoId,
+  topicoIndex,
+  onUpdateScore,
+  isSaving,
+  justSaved,
+}: {
+  topico: TopicoEstrategico;
+  conteudoId: number;
+  topicoIndex: number;
+  onUpdateScore: (conteudoId: number, topicoIndex: number, newScore: number) => void;
+  isSaving: boolean;
+  justSaved: boolean;
+}) {
   const [expanded, setExpanded] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [draftScore, setDraftScore] = useState(String(topico.pontuacao_relevancia ?? 0));
   const score = topico.pontuacao_relevancia ?? 0;
   const tier = impactTier(score);
   const cfg = tierConfig[tier];
@@ -841,8 +931,33 @@ function TopicoCard({ topico }: { topico: TopicoEstrategico }) {
   const hasJustificativa = !!topico.justificativa_pontuacao;
   const isClickable = hasSintese || hasJustificativa;
 
+  function startEdit(e: React.MouseEvent) {
+    e.stopPropagation();
+    setDraftScore(String(score));
+    setEditing(true);
+  }
+
+  function commitEdit() {
+    setEditing(false);
+    const parsed = parseInt(draftScore, 10);
+    if (Number.isNaN(parsed)) return;
+    const clamped = Math.max(0, Math.min(10, parsed));
+    if (clamped === score) return;
+    onUpdateScore(conteudoId, topicoIndex, clamped);
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      commitEdit();
+    } else if (e.key === 'Escape') {
+      setEditing(false);
+      setDraftScore(String(score));
+    }
+  }
+
   return (
-    <button
+    <div
       onClick={isClickable ? () => setExpanded((v) => !v) : undefined}
       className={`w-full text-left rounded-lg border ${cfg.card} p-3 transition-all ${
         isClickable ? 'cursor-pointer hover:shadow-md hover:border-slate-300 dark:hover:border-slate-700' : 'cursor-default'
@@ -858,13 +973,39 @@ function TopicoCard({ topico }: { topico: TopicoEstrategico }) {
           >
             {cfg.label}
           </span>
-          <span
-            className={`inline-flex items-center justify-center min-w-[26px] h-6 px-1 rounded text-xs font-bold border ${cfg.badge}`}
-            title="Pontuação de relevância"
-          >
-            {score}
-          </span>
-          {isClickable && (
+          {editing ? (
+            <input
+              type="number"
+              min={0}
+              max={10}
+              value={draftScore}
+              onChange={(e) => setDraftScore(e.target.value)}
+              onBlur={commitEdit}
+              onKeyDown={handleKeyDown}
+              onClick={(e) => e.stopPropagation()}
+              autoFocus
+              className="w-12 h-6 px-1 text-xs font-bold text-center rounded border border-brand-400 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500/40"
+            />
+          ) : (
+            <span
+              className={`inline-flex items-center justify-center min-w-[26px] h-6 px-1 rounded text-xs font-bold border ${cfg.badge} ${
+                justSaved ? 'ring-2 ring-emerald-400 ring-offset-1 dark:ring-offset-slate-900' : ''
+              }`}
+              title="Pontuação de relevância"
+            >
+              {score}
+            </span>
+          )}
+          {!editing && (
+            <button
+              onClick={startEdit}
+              className="p-0.5 rounded text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 transition-colors"
+              title="Calibrar pontuação"
+            >
+              {isSaving ? <Spinner className="w-3.5 h-3.5" /> : justSaved ? <CheckCircle2 size={13} className="text-emerald-500" /> : <Pencil size={12} />}
+            </button>
+          )}
+          {isClickable && !editing && (
             <span className="text-slate-400 dark:text-slate-500 ml-0.5">
               {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
             </span>
@@ -897,11 +1038,18 @@ function TopicoCard({ topico }: { topico: TopicoEstrategico }) {
         </div>
       )}
 
-      {isClickable && !expanded && (
+      {isClickable && !expanded && !editing && (
         <div className="text-[11px] text-slate-400 dark:text-slate-500 mt-1.5">
           Clique para ver a síntese completa
         </div>
       )}
-    </button>
+
+      {justSaved && (
+        <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium mt-1.5 flex items-center gap-1">
+          <CheckCircle2 size={12} />
+          Nota calibrada com sucesso
+        </div>
+      )}
+    </div>
   );
 }
