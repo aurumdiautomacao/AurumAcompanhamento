@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Newspaper, Mail, Lock, AlertCircle } from 'lucide-react';
+import { Mail, Lock, AlertCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Spinner } from '../components/ui';
 
@@ -32,11 +32,12 @@ export default function Login() {
         <div className="absolute -bottom-32 -left-32 w-96 h-96 rounded-full bg-brand-400 blur-3xl" />
       </div>
       <div className="mx-auto w-full max-w-md relative">
-        <div className="flex items-center justify-center gap-2.5 mb-8">
-          <div className="w-11 h-11 rounded-xl bg-gold-500 flex items-center justify-center shadow-lg shadow-gold-900/30">
-            <Newspaper className="text-brand-950" size={24} />
-          </div>
-          <span className="text-2xl font-semibold text-white">Aurum <span className="text-gold-400 font-normal">DI</span></span>
+        <div className="flex justify-center mb-8">
+          <img
+            src="/aurum-logo.png"
+            alt="Aurum DI"
+            className="h-16 w-full max-w-[280px] object-contain"
+          />
         </div>
 
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl p-6 sm:p-8">
