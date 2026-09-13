@@ -140,8 +140,8 @@ export default function SettingsApi() {
   const avgCost = daily.length > 0 ? totalCost / daily.length : 0;
   const peakCost = daily.length > 0 ? Math.max(...daily.map((d) => d.cost)) : 0;
   const chartWidth = 720;
-  const chartHeight = 240;
-  const chartPadding = { top: 16, right: 16, bottom: 32, left: 56 };
+  const chartHeight = 320;
+  const chartPadding = { top: 20, right: 20, bottom: 44, left: 64 };
   const chartMax = Math.max(1, Math.ceil(Math.max(0, ...daily.map((d) => d.cost))));
   const chartInnerWidth = chartWidth - chartPadding.left - chartPadding.right;
   const chartInnerHeight = chartHeight - chartPadding.top - chartPadding.bottom;
@@ -173,8 +173,8 @@ export default function SettingsApi() {
         subtitle="Gerencie seu token OpenAI e acompanhe seu consumo individual"
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="p-6">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <Card className="min-w-0 p-6">
           <div className="flex items-center gap-2 mb-1">
             <Key size={18} className="text-brand-600 dark:text-brand-400" />
             <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">
@@ -228,7 +228,7 @@ export default function SettingsApi() {
           </form>
         </Card>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 min-w-0">
           <StatCard
             label="Custo total (mês)"
             value={formatCost(totalCost)}
@@ -300,10 +300,10 @@ export default function SettingsApi() {
                 </span>
               </div>
 
-              <div className="relative w-full overflow-x-auto">
+              <div className="relative w-full">
                 <svg
                   viewBox={`0 0 ${chartWidth} ${chartHeight}`}
-                  className="w-full min-w-[560px] h-60"
+                  className="block w-full h-[300px] sm:h-[360px]"
                   role="img"
                   aria-label="Linha de evolução do consumo diário"
                 >
@@ -324,7 +324,7 @@ export default function SettingsApi() {
                           x={chartPadding.left - 10}
                           y={y + 4}
                           textAnchor="end"
-                          className="fill-slate-400 dark:fill-slate-500 text-[11px]"
+                          className="fill-slate-400 dark:fill-slate-500 text-[12px]"
                         >
                           {formatCost(value)}
                         </text>
@@ -349,7 +349,7 @@ export default function SettingsApi() {
                       <circle
                         cx={point.x}
                         cy={point.y}
-                        r="4"
+                        r="5"
                         className="fill-white stroke-brand-600 dark:fill-slate-900 dark:stroke-brand-400"
                         strokeWidth="3"
                         onMouseEnter={() => setHoveredPoint(point)}
@@ -363,7 +363,7 @@ export default function SettingsApi() {
                         x={point.x}
                         y={chartHeight - 10}
                         textAnchor="middle"
-                        className="fill-slate-400 dark:fill-slate-500 text-[10px]"
+                        className="fill-slate-400 dark:fill-slate-500 text-[11px]"
                       >
                         {formatShortDate(point.date)}
                       </text>

@@ -11,6 +11,7 @@ import {
   XCircle,
   X,
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import {
   supabase,
   type FonteNoticia,
@@ -31,6 +32,8 @@ type FormState = {
 const EMPTY_FORM: FormState = { nome: '', url: '', tipo_coleta: 'HTML' };
 
 export default function FontesNoticias() {
+  const { profile } = useAuth();
+  const canManageSources = profile?.role === 'admin' || profile?.role === 'editor';
   const [fontes, setFontes] = useState<FonteNoticia[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -174,13 +177,15 @@ export default function FontesNoticias() {
               {loading ? <Spinner /> : <RefreshCw size={16} />}
               Atualizar
             </button>
-            <button
-              onClick={openCreate}
-              className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-brand-950 bg-gold-500 hover:bg-gold-400 rounded-lg transition-colors"
-            >
-              <Plus size={16} />
-              Nova fonte
-            </button>
+            {canManageSources && (
+              <button
+                onClick={openCreate}
+                className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-brand-950 bg-gold-500 hover:bg-gold-400 rounded-lg transition-colors"
+              >
+                <Plus size={16} />
+                Nova fonte
+              </button>
+            )}
           </div>
         }
       />
@@ -295,6 +300,7 @@ export default function FontesNoticias() {
                 onDelete={() => handleDelete(f.id)}
                 onToggle={() => toggleAtivo(f)}
                 deleting={deletingId === f.id}
+                canManage={canManageSources}
               />
             ))}
           </div>
@@ -310,12 +316,14 @@ function FonteCard({
   onDelete,
   onToggle,
   deleting,
+  canManage,
 }: {
   fonte: FonteNoticia;
   onEdit: () => void;
   onDelete: () => void;
   onToggle: () => void;
   deleting: boolean;
+  canManage: boolean;
 }) {
   const isRss = (fonte.tipo_coleta ?? 'html').toLowerCase() === 'rss';
   const ativo = fonte.ativo ?? true;
@@ -339,35 +347,43 @@ function FonteCard({
             {isRss ? <Rss size={11} /> : <Code size={11} />}
             {isRss ? 'RSS' : 'HTML'}
           </span>
-          <button
-            onClick={onToggle}
-            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium border transition-colors ${
-              ativo
-                ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-900'
-                : 'bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700'
-            }`}
-          >
-            {ativo ? <CheckCircle2 size={11} /> : <XCircle size={11} />}
-            {ativo ? 'Ativo' : 'Inativo'}
-          </button>
+          {canManage ? (
+            <button
+              onClick={onToggle}
+              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium border transition-colors ${
+                ativo
+                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-900'
+                  : 'bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700'
+              }`}
+            >
+              {ativo ? <CheckCircle2 size={11} /> : <XCircle size={11} />}
+              {ativo ? 'Ativo' : 'Inativo'}
+            </button>
+          ) : (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium border bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700">
+              {ativo ? 'Ativo' : 'Inativo'}
+            </span>
+          )}
         </div>
-        <div className="flex items-center gap-1">
-          <button
-            onClick={onEdit}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-950/40 transition-colors"
-            title="Editar"
-          >
-            <Pencil size={15} />
-          </button>
-          <button
-            onClick={onDelete}
-            disabled={deleting}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors disabled:opacity-40"
-            title="Excluir"
-          >
-            {deleting ? <Spinner /> : <Trash2 size={15} />}
-          </button>
-        </div>
+        {canManage && (
+          <div className="flex items-center gap-1">
+            <button
+              onClick={onEdit}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-950/40 transition-colors"
+              title="Editar"
+            >
+              <Pencil size={15} />
+            </button>
+            <button
+              onClick={onDelete}
+              disabled={deleting}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors disabled:opacity-40"
+              title="Excluir"
+            >
+              {deleting ? <Spinner /> : <Trash2 size={15} />}
+            </button>
+          </div>
+        )}
       </div>
 
       <div>

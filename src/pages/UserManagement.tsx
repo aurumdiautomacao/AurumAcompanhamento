@@ -162,20 +162,24 @@ export default function UserManagement() {
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="inline-flex items-center gap-2">
-                        <button
-                          className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800"
-                          title="Editar usuário"
-                        >
-                          <Pencil size={13} />
-                          Editar
-                        </button>
-                        <button
-                          className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40"
-                          title="Desativar usuário"
-                        >
-                          <Ban size={13} />
-                          Desativar
-                        </button>
+                        {isAdmin && (
+                          <>
+                            <button
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800"
+                              title="Editar usuário"
+                            >
+                              <Pencil size={13} />
+                              Editar
+                            </button>
+                            <button
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40"
+                              title="Desativar usuário"
+                            >
+                              <Ban size={13} />
+                              Desativar
+                            </button>
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>

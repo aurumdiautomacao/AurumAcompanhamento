@@ -12,11 +12,16 @@ import {
   Moon,
   Sun,
   Rss,
+  PanelLeft,
+  PanelLeftClose,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { Badge } from './ui';
+import { Badge, Spinner } from './ui';
 import { APP_VERSION } from '../lib/appVersion';
+
+const SIDEBAR_LOGO = '/aurum-logo.png';
+const SIDEBAR_COLLAPSED_LOGO = '/aurum-logo-collapsed.png';
 
 const navItems = [
   { to: '/', label: 'Central de Notícias', icon: Newspaper, end: true },
@@ -32,27 +37,41 @@ export default function Layout({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
 
   async function handleSignOut() {
-    await signOut();
-    navigate('/login');
+    if (signingOut) return;
+    setSigningOut(true);
+    setMenuOpen(false);
+    try {
+      await signOut();
+      navigate('/login');
+    } finally {
+      setSigningOut(false);
+    }
   }
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex">
       <aside
-        className={`fixed lg:static inset-y-0 left-0 z-40 w-64 bg-brand-950 text-brand-100 flex flex-col transform transition-transform duration-200 ${
+        className={`fixed lg:sticky lg:top-0 lg:self-start lg:h-screen lg:overflow-y-auto inset-y-0 left-0 z-40 bg-brand-950 text-brand-100 flex flex-col transform transition-all duration-200 relative ${
+          sidebarCollapsed ? 'w-64 lg:w-20' : 'w-64 lg:w-64'
+        } ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
-        <div className="h-16 flex items-center gap-2 px-5 border-b border-brand-900">
-          <div className="w-8 h-8 rounded-lg bg-gold-500 flex items-center justify-center">
-            <Newspaper className="text-brand-950" size={18} />
+        <div className={`h-16 flex items-center border-b border-brand-900 ${sidebarCollapsed ? 'justify-center px-3' : 'gap-2 px-5'}`}>
+          <div className={`shrink-0 ${sidebarCollapsed ? 'w-8 h-8' : 'w-[172px] h-10'}`}>
+            <img
+              src={sidebarCollapsed ? SIDEBAR_COLLAPSED_LOGO : SIDEBAR_LOGO}
+              alt="Aurum DI"
+              className="block h-full w-full object-contain"
+            />
           </div>
-          <span className="text-lg font-semibold text-white">AURUM <span className="text-gold-400 font-normal">DI</span></span>
         </div>
 
-        <nav className="flex-1 px-3 py-4 space-y-1">
+        <nav className={`flex-1 py-4 space-y-1 ${sidebarCollapsed ? 'px-2' : 'px-3'}`}>
           {navItems.map((item) => {
             const Icon = item.icon;
             return (
@@ -61,8 +80,9 @@ export default function Layout({ children }: { children: ReactNode }) {
                 to={item.to}
                 end={item.end}
                 onClick={() => setMobileOpen(false)}
+                title={sidebarCollapsed ? item.label : undefined}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                  `flex items-center rounded-lg text-sm font-medium transition-colors ${sidebarCollapsed ? 'justify-center px-2.5 py-3' : 'gap-3 px-3 py-2.5'} ${
                     isActive
                       ? 'bg-gold-500 text-brand-950'
                       : 'text-brand-100 hover:bg-brand-800 hover:text-white'
@@ -70,7 +90,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                 }
               >
                 <Icon size={18} />
-                {item.label}
+                {!sidebarCollapsed && item.label}
               </NavLink>
             );
           })}
@@ -78,23 +98,37 @@ export default function Layout({ children }: { children: ReactNode }) {
 
         <div className="p-3 border-t border-brand-900">
           <button
+            onClick={() => setSidebarCollapsed((value) => !value)}
+            className={`hidden lg:flex w-full items-center rounded-lg text-sm text-brand-100 hover:bg-brand-800 hover:text-white transition-colors ${sidebarCollapsed ? 'justify-center px-3 py-2' : 'gap-2 px-3 py-2'}`}
+            aria-label={sidebarCollapsed ? 'Expandir barra lateral' : 'Recolher barra lateral'}
+            title={sidebarCollapsed ? 'Expandir barra lateral' : 'Recolher barra lateral'}
+          >
+            {sidebarCollapsed ? <PanelLeft size={16} /> : <PanelLeftClose size={16} />}
+            {!sidebarCollapsed && 'Recolher barra lateral'}
+          </button>
+          <button
             onClick={toggleTheme}
-            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-brand-100 hover:bg-brand-800 hover:text-white transition-colors"
+            title={sidebarCollapsed ? (theme === 'dark' ? 'Tema claro' : 'Tema escuro') : undefined}
+            className={`w-full flex items-center rounded-lg text-sm text-brand-100 hover:bg-brand-800 hover:text-white transition-colors ${sidebarCollapsed ? 'justify-center px-3 py-2' : 'gap-2 px-3 py-2'}`}
           >
             {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
-            {theme === 'dark' ? 'Tema claro' : 'Tema escuro'}
+            {!sidebarCollapsed && (theme === 'dark' ? 'Tema claro' : 'Tema escuro')}
           </button>
-          <div className="px-3 py-2 text-xs text-brand-400">
-            © {new Date().getFullYear()} Aurum DI
-          </div>
-          <div className="mx-3 mb-2 rounded-md border border-brand-800 bg-brand-900/60 px-3 py-2">
-            <div className="text-[10px] uppercase tracking-wide text-brand-400">
-              Versão do sistema
-            </div>
-            <div className="mt-0.5 font-mono text-sm font-semibold text-gold-400">
-              v{APP_VERSION}
-            </div>
-          </div>
+          {!sidebarCollapsed && (
+            <>
+              <div className="px-3 py-2 text-xs text-brand-400">
+                © {new Date().getFullYear()} Aurum DI
+              </div>
+              <div className="mx-3 mb-2 rounded-md border border-brand-800 bg-brand-900/60 px-3 py-2">
+                <div className="text-[10px] uppercase tracking-wide text-brand-400">
+                  Versão do sistema
+                </div>
+                <div className="mt-0.5 font-mono text-sm font-semibold text-gold-400">
+                  v{APP_VERSION}
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </aside>
 
@@ -165,10 +199,11 @@ export default function Layout({ children }: { children: ReactNode }) {
                     </div>
                     <button
                       onClick={handleSignOut}
-                      className="w-full flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
+                      disabled={signingOut}
+                      className="w-full flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:cursor-wait disabled:opacity-60"
                     >
-                      <LogOut size={16} />
-                      Sair
+                      {signingOut ? <Spinner className="w-4 h-4" /> : <LogOut size={16} />}
+                      {signingOut ? 'Saindo...' : 'Sair'}
                     </button>
                   </div>
                 </>

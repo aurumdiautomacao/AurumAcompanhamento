@@ -52,7 +52,8 @@ export default function ApprovalCenter() {
   const [detailPost, setDetailPost] = useState<PostGerado | null>(null);
   const [savedScoreKey, setSavedScoreKey] = useState<string | null>(null);
   const [savingScoreKey, setSavingScoreKey] = useState<string | null>(null);
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
+  const canEditContent = profile?.role === 'admin' || profile?.role === 'editor';
 
   async function updateTopicoScore(conteudoId: number, topicoIndex: number, newScore: number) {
     const clamped = Math.max(0, Math.min(10, newScore));
@@ -368,6 +369,7 @@ export default function ApprovalCenter() {
                   onUpdateScore={updateTopicoScore}
                   savingScoreKey={savingScoreKey}
                   savedScoreKey={savedScoreKey}
+                  canEdit={canEditContent}
                 />
               )}
 
@@ -419,6 +421,7 @@ export default function ApprovalCenter() {
                           approvingId={approvingId}
                           onApprove={approve}
                           onDisapprove={disapprove}
+                          canEdit={canEditContent}
                           onOpenDetail={() => setDetailPost(p)}
                         />
                       ))}
@@ -437,6 +440,7 @@ export default function ApprovalCenter() {
           approvingId={approvingId}
           onApprove={approve}
           onDisapprove={disapprove}
+          canEdit={canEditContent}
           onClose={() => setDetailPost(null)}
         />
       )}
@@ -563,12 +567,14 @@ function BriefingApprovalCard({
   approvingId,
   onApprove,
   onDisapprove,
+  canEdit,
   onOpenDetail,
 }: {
   post: PostGerado;
   approvingId: number | null;
   onApprove: (id: number) => void;
   onDisapprove: (id: number) => void;
+  canEdit: boolean;
   onOpenDetail: () => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -670,7 +676,7 @@ function BriefingApprovalCard({
         {/* Approval action */}
         <div className="flex items-center justify-between mt-auto pt-2.5 border-t border-slate-100 dark:border-slate-800">
           <Badge status={isApproved ? 'aprovado' : 'pendente'} />
-          {isApproved ? (
+          {canEdit && isApproved ? (
             <button
               onClick={() => onDisapprove(post.id)}
               disabled={approvingId === post.id}
@@ -679,7 +685,7 @@ function BriefingApprovalCard({
               {approvingId === post.id ? <Spinner /> : <RotateCcw size={13} />}
               Desaprovar
             </button>
-          ) : (
+          ) : canEdit ? (
             <button
               onClick={() => onApprove(post.id)}
               disabled={approvingId === post.id}
@@ -688,7 +694,7 @@ function BriefingApprovalCard({
               {approvingId === post.id ? <Spinner /> : <CheckCircle2 size={13} />}
               Aprovar
             </button>
-          )}
+          ) : null}
         </div>
       </div>
     </div>
@@ -700,12 +706,14 @@ function PostDetailModal({
   approvingId,
   onApprove,
   onDisapprove,
+  canEdit,
   onClose,
 }: {
   post: PostGerado;
   approvingId: number | null;
   onApprove: (id: number) => void;
   onDisapprove: (id: number) => void;
+  canEdit: boolean;
   onClose: () => void;
 }) {
   const isInstagram = canonicalPlataforma(post.plataforma) === 'instagram';
@@ -866,7 +874,7 @@ function PostDetailModal({
             >
               Fechar
             </button>
-            {isApproved ? (
+            {canEdit && isApproved ? (
               <button
                 onClick={() => onDisapprove(post.id)}
                 disabled={approvingId === post.id}
@@ -875,7 +883,7 @@ function PostDetailModal({
                 {approvingId === post.id ? <Spinner /> : <RotateCcw size={16} />}
                 Desaprovar post
               </button>
-            ) : (
+            ) : canEdit ? (
               <button
                 onClick={() => onApprove(post.id)}
                 disabled={approvingId === post.id}
@@ -884,7 +892,7 @@ function PostDetailModal({
                 {approvingId === post.id ? <Spinner /> : <CheckCircle2 size={16} />}
                 Aprovar post
               </button>
-            )}
+            ) : null}
           </div>
         </div>
       </div>
@@ -946,6 +954,7 @@ function RadarEstrategico({
   onUpdateScore,
   savingScoreKey,
   savedScoreKey,
+  canEdit,
 }: {
   topicos: TopicoEstrategico[];
   conteudoId: number;
@@ -953,6 +962,7 @@ function RadarEstrategico({
   onUpdateScore: (conteudoId: number, topicoIndex: number, newScore: number) => void;
   savingScoreKey: string | null;
   savedScoreKey: string | null;
+  canEdit: boolean;
 }) {
   const [open, setOpen] = useState(true);
   const [helpOpen, setHelpOpen] = useState(false);
@@ -1061,6 +1071,7 @@ function RadarEstrategico({
                   onUpdateScore={onUpdateScore}
                   isSaving={savingScoreKey === `${conteudoId}-${originalIndex}`}
                   justSaved={savedScoreKey === `${conteudoId}-${originalIndex}`}
+                  canEdit={canEdit}
                 />
               ))}
             </div>
@@ -1079,6 +1090,7 @@ function TopicoCard({
   onUpdateScore,
   isSaving,
   justSaved,
+  canEdit,
 }: {
   topico: TopicoEstrategico;
   conteudoId: number;
@@ -1087,6 +1099,7 @@ function TopicoCard({
   onUpdateScore: (conteudoId: number, topicoIndex: number, newScore: number) => void;
   isSaving: boolean;
   justSaved: boolean;
+  canEdit: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -1167,7 +1180,7 @@ function TopicoCard({
               {score}
             </span>
           )}
-          {!editing && (
+          {!editing && canEdit && (
             <button
               onClick={startEdit}
               className="p-0.5 rounded text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 transition-colors"
