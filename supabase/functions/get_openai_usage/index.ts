@@ -1,4 +1,5 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from "jsr:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -16,12 +17,11 @@ function json(data: unknown, status = 200) {
   });
 }
 
-// Converte as datas para Unix Timestamps (Exigência da nova API da OpenAI)
 function monthRangeUTC() {
   const now = new Date();
   const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
   const end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 23, 59, 59));
-  
+
   return {
     startUnix: Math.floor(start.getTime() / 1000),
     endUnix: Math.floor(end.getTime() / 1000),
@@ -39,22 +39,38 @@ Deno.serve(async (req: Request) => {
     return json({ error: "Method not allowed. Use POST." }, 405);
   }
 
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return json({ error: "Não autorizado." }, 401);
+  }
+
+  const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+  const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
+
+  const authClient = createClient(supabaseUrl, supabaseAnonKey, {
+    global: { headers: { Authorization: authHeader } },
+  });
+
+  const { data: userData, error: userError } = await authClient.auth.getUser();
+  if (userError || !userData.user) {
+    return json({ error: "Não autorizado." }, 401);
+  }
+
   let body;
   try {
     body = await req.json();
   } catch {
-    return json({ error: "Invalid JSON body." }, 400);
+    return json({ error: "Requisição inválida." }, 400);
   }
 
   const apiKey = body.openai_api_key;
   if (!apiKey || typeof apiKey !== "string" || !apiKey.trim()) {
-    return json({ error: "openai_api_key is required." }, 400);
+    return json({ error: "Parâmetros obrigatórios ausentes." }, 400);
   }
 
   const { startUnix, endUnix, startStr, endStr } = monthRangeUTC();
 
   try {
-    // Comunicação usando os parâmetros corretos: start_time e end_time
     const upstream = await fetch(
       `https://api.openai.com/v1/organization/costs?start_time=${startUnix}&end_time=${endUnix}&limit=31`,
       {
@@ -68,22 +84,14 @@ Deno.serve(async (req: Request) => {
 
     if (upstream.status === 401 || upstream.status === 403) {
       return json(
-        {
-          error: "Chave da OpenAI inválida ou sem permissão. Certifique-se de usar uma Service Account Key.",
-          code: "invalid_api_key",
-        },
+        { error: "Chave da OpenAI inválida ou sem permissão.", code: "invalid_api_key" },
         401
       );
     }
 
     if (!upstream.ok) {
-      const text = await upstream.text();
       return json(
-        {
-          error: `Erro na API da OpenAI (${upstream.status}).`,
-          detail: text,
-          code: "openai_error",
-        },
+        { error: "Erro ao processar a requisição com a IA." },
         upstream.status
       );
     }
@@ -94,11 +102,10 @@ Deno.serve(async (req: Request) => {
     let totalCost = 0;
     const daily = [];
 
-    // Parseando a nova estrutura de resposta da OpenAI
     for (const row of rows) {
       const dayCost = row.amount?.value ?? 0;
       totalCost += dayCost;
-      
+
       if (row.start_time) {
         const dateStr = new Date(row.start_time * 1000).toISOString().slice(0, 10);
         daily.push({ date: dateStr, cost: Number(dayCost.toFixed(6)) });
@@ -113,10 +120,9 @@ Deno.serve(async (req: Request) => {
       period: { start: startStr, end: endStr },
       daily,
     });
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
+  } catch {
     return json(
-      { error: "Falha interna ao consultar uso da OpenAI.", detail: message, code: "fetch_failed" },
+      { error: "Erro ao processar a requisição com a IA." },
       502
     );
   }

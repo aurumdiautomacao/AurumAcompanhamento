@@ -2,8 +2,6 @@ import { useEffect, useState, type FormEvent } from 'react';
 import {
   Key,
   Save,
-  Eye,
-  EyeOff,
   CheckCircle2,
   Wallet,
   Activity,
@@ -32,7 +30,6 @@ const FUNCTION_PATH = '/functions/v1/get_openai_usage';
 export default function SettingsApi() {
   const { user } = useAuth();
   const [token, setToken] = useState('');
-  const [showToken, setShowToken] = useState(false);
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [settingsId, setSettingsId] = useState<string | null>(null);
@@ -109,14 +106,13 @@ export default function SettingsApi() {
               'Chave da OpenAI inválida ou sem permissão. Verifique o token e tente novamente.',
           );
         } else {
-          setUsageError(json.error ?? `Erro ${res.status} ao consultar consumo.`);
+          setUsageError('Erro ao processar a requisição com a IA. Tente novamente.');
         }
         return;
       }
       setUsage(json);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      setUsageError(`Falha ao chamar a Edge Function: ${msg}`);
+    } catch {
+      setUsageError('Erro ao processar a requisição com a IA. Tente novamente.');
     } finally {
       setLoadingUsage(false);
     }
@@ -153,23 +149,18 @@ export default function SettingsApi() {
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-1.5">
                 API Key
               </label>
-              <div className="relative">
-                <input
-                  type={showToken ? 'text' : 'password'}
-                  value={token}
-                  onChange={(e) => setToken(e.target.value)}
-                  placeholder="sk-..."
-                  className="w-full pl-3 pr-10 py-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowToken((v) => !v)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-                  aria-label={showToken ? 'Ocultar token' : 'Mostrar token'}
-                >
-                  {showToken ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
-              </div>
+              <input
+                type="password"
+                value={token}
+                onChange={(e) => setToken(e.target.value)}
+                placeholder="sk-..."
+                className="w-full pl-3 pr-3 py-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+              />
+              {settingsId && token && (
+                <p className="text-xs text-slate-400 dark:text-slate-500 mt-1.5 font-mono">
+                  Chave salva: {token.length > 8 ? `${token.slice(0, 3)}...${token.slice(-4)}` : 'sk-...'}
+                </p>
+              )}
               <p className="text-xs text-slate-400 dark:text-slate-500 mt-1.5">
                 {settingsId
                   ? 'Token salvo no banco (atualizado).'
