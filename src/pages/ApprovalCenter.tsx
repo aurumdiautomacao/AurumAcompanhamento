@@ -17,6 +17,7 @@ import {
   Check,
   CircleDashed,
   X,
+  RotateCcw,
   Maximize2,
   Type,
   AlignLeft,
@@ -187,23 +188,41 @@ export default function ApprovalCenter() {
     loadPosts();
   }, []);
 
-  async function approve(id: number) {
+  async function updatePostStatus(id: number, nextStatus: 'aprovado' | 'pendente') {
+    const previousPost = posts.find((post) => post.id === id);
+    const previousStatus = previousPost?.status ?? 'pendente';
     setApprovingId(id);
     const optimistic = posts.map((p) =>
-      p.id === id ? { ...p, status: 'aprovado' } : p,
+      p.id === id ? { ...p, status: nextStatus } : p,
     );
     setPosts(optimistic);
+    setDetailPost((current) =>
+      current?.id === id ? { ...current, status: nextStatus } : current,
+    );
     const { error } = await supabase
       .from('posts_gerados')
-      .update({ status: 'aprovado' })
+      .update({ status: nextStatus })
       .eq('id', id);
     setApprovingId(null);
     if (error) {
       setErrorPosts(error.message);
       setPosts((prev) =>
-        prev.map((p) => (p.id === id ? { ...p, status: 'pendente' } : p)),
+        prev.map((p) => (p.id === id ? { ...p, status: previousStatus } : p)),
+      );
+      setDetailPost((current) =>
+        current?.id === id
+          ? { ...current, status: previousPost?.status ?? 'pendente' }
+          : current,
       );
     }
+  }
+
+  async function approve(id: number) {
+    await updatePostStatus(id, 'aprovado');
+  }
+
+  async function disapprove(id: number) {
+    await updatePostStatus(id, 'pendente');
   }
 
   const selected = relatorios.find((r) => r.id === selectedId) ?? null;
@@ -310,24 +329,28 @@ export default function ApprovalCenter() {
                 <StatChip
                   icon={Layers}
                   label="Posts"
+                  description="Posts gerados"
                   value={selectedPosts.length}
                   tone="brand"
                 />
                 <StatChip
                   icon={Check}
                   label="Aprovados"
+                  description="Posts gerados aprovados"
                   value={approvedCount}
                   tone="success"
                 />
                 <StatChip
                   icon={CircleDashed}
                   label="Pendentes"
+                  description="Posts gerados pendentes"
                   value={pendingCount}
                   tone="warning"
                 />
                 <StatChip
                   icon={Radar}
                   label="Tópicos"
+                  description="Tópicos estratégicos"
                   value={topicos.length}
                   tone="gold"
                 />
@@ -395,6 +418,7 @@ export default function ApprovalCenter() {
                           post={p}
                           approvingId={approvingId}
                           onApprove={approve}
+                          onDisapprove={disapprove}
                           onOpenDetail={() => setDetailPost(p)}
                         />
                       ))}
@@ -412,6 +436,7 @@ export default function ApprovalCenter() {
           post={detailPost}
           approvingId={approvingId}
           onApprove={approve}
+          onDisapprove={disapprove}
           onClose={() => setDetailPost(null)}
         />
       )}
@@ -422,11 +447,13 @@ export default function ApprovalCenter() {
 function StatChip({
   icon: Icon,
   label,
+  description,
   value,
   tone,
 }: {
   icon: typeof Layers;
   label: string;
+  description: string;
   value: number;
   tone: 'brand' | 'success' | 'warning' | 'gold';
 }) {
@@ -447,6 +474,9 @@ function StatChip({
         </div>
         <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 truncate">
           {label}
+        </div>
+        <div className="text-[10px] text-slate-400 dark:text-slate-500 leading-tight truncate" title={description}>
+          {description}
         </div>
       </div>
     </Card>
@@ -532,11 +562,13 @@ function BriefingApprovalCard({
   post,
   approvingId,
   onApprove,
+  onDisapprove,
   onOpenDetail,
 }: {
   post: PostGerado;
   approvingId: number | null;
   onApprove: (id: number) => void;
+  onDisapprove: (id: number) => void;
   onOpenDetail: () => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -639,9 +671,14 @@ function BriefingApprovalCard({
         <div className="flex items-center justify-between mt-auto pt-2.5 border-t border-slate-100 dark:border-slate-800">
           <Badge status={isApproved ? 'aprovado' : 'pendente'} />
           {isApproved ? (
-            <span className="inline-flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
-              <CheckCircle2 size={13} /> Aprovado
-            </span>
+            <button
+              onClick={() => onDisapprove(post.id)}
+              disabled={approvingId === post.id}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-[11px] font-medium text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-950/40 disabled:opacity-60 transition-colors"
+            >
+              {approvingId === post.id ? <Spinner /> : <RotateCcw size={13} />}
+              Desaprovar
+            </button>
           ) : (
             <button
               onClick={() => onApprove(post.id)}
@@ -662,11 +699,13 @@ function PostDetailModal({
   post,
   approvingId,
   onApprove,
+  onDisapprove,
   onClose,
 }: {
   post: PostGerado;
   approvingId: number | null;
   onApprove: (id: number) => void;
+  onDisapprove: (id: number) => void;
   onClose: () => void;
 }) {
   const isInstagram = canonicalPlataforma(post.plataforma) === 'instagram';
@@ -828,9 +867,14 @@ function PostDetailModal({
               Fechar
             </button>
             {isApproved ? (
-              <span className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 rounded-lg">
-                <CheckCircle2 size={16} /> Aprovado
-              </span>
+              <button
+                onClick={() => onDisapprove(post.id)}
+                disabled={approvingId === post.id}
+                className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-lg disabled:opacity-60 transition-colors"
+              >
+                {approvingId === post.id ? <Spinner /> : <RotateCcw size={16} />}
+                Desaprovar post
+              </button>
             ) : (
               <button
                 onClick={() => onApprove(post.id)}
