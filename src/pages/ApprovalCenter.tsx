@@ -109,19 +109,19 @@ export default function ApprovalCenter() {
     );
 
     setSavingScoreKey(key);
-    const { error } = await supabase
+    const { error, count } = await supabase
       .from('conteudo_gerado')
       .update({
         topicos_estrategicos: updatedTopicos,
         topicos_editados: newEdited,
         topicos_editados_usuario: userEmail,
         topicos_editados_log: newLog,
-      })
+      }, { count: 'exact' })
       .eq('id', conteudoId);
     setSavingScoreKey(null);
 
-    if (error) {
-      setErrorRel(error.message);
+    if (error || count === 0) {
+      setErrorRel(error?.message ?? 'Sem permissão para alterar este conteúdo. Verifique seu nível de acesso.');
       setRelatorios((prev) =>
         prev.map((r) =>
           r.id === conteudoId
