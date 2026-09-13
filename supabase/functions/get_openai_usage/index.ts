@@ -103,13 +103,24 @@ Deno.serve(async (req: Request) => {
     const daily = [];
 
     for (const row of rows) {
-      const dayCost = row.amount?.value ?? 0;
+      const results = Array.isArray(row.results) ? row.results : [];
+      const bucketCost = results.reduce((sum: number, result: any) => {
+        const value = Number(result.amount?.value ?? 0);
+        return sum + (Number.isFinite(value) ? value : 0);
+      }, 0);
+      const legacyCost = Number(row.amount?.value ?? 0);
+      const dayCost = results.length > 0 ? bucketCost : legacyCost;
       totalCost += dayCost;
 
       if (row.start_time) {
         const dateStr = new Date(row.start_time * 1000).toISOString().slice(0, 10);
         daily.push({ date: dateStr, cost: Number(dayCost.toFixed(6)) });
       }
+    }
+
+    const todayStr = new Date().toISOString().slice(0, 10);
+    if (!daily.some((item) => item.date === todayStr)) {
+      daily.push({ date: todayStr, cost: 0 });
     }
 
     daily.sort((a, b) => (a.date < b.date ? -1 : 1));

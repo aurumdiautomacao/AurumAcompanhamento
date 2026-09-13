@@ -15,6 +15,7 @@ import { supabase, type ApiSettings } from '../lib/supabaseClient';
 import { useAuth } from '../context/AuthContext';
 
 type DailyUsage = { date: string; cost: number };
+type ChartPoint = DailyUsage & { x: number; y: number };
 
 type UsageResponse = {
   total_cost?: number;
@@ -27,6 +28,13 @@ type UsageResponse = {
 
 const FUNCTION_PATH = '/functions/v1/get_openai_usage';
 
+function getLocalDateKey(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 export default function SettingsApi() {
   const { user } = useAuth();
   const [token, setToken] = useState('');
@@ -37,6 +45,7 @@ export default function SettingsApi() {
   const [usage, setUsage] = useState<UsageResponse | null>(null);
   const [loadingUsage, setLoadingUsage] = useState(false);
   const [usageError, setUsageError] = useState<string | null>(null);
+  const [hoveredPoint, setHoveredPoint] = useState<ChartPoint | null>(null);
 
   async function loadSettings() {
     if (!user) return;
@@ -110,7 +119,14 @@ export default function SettingsApi() {
         }
         return;
       }
-      setUsage(json);
+
+      const daily = [...(json.daily ?? [])];
+      const today = getLocalDateKey();
+      if (!daily.some((item) => item.date === today)) {
+        daily.push({ date: today, cost: 0 });
+        daily.sort((a, b) => (a.date < b.date ? -1 : 1));
+      }
+      setUsage({ ...json, daily });
     } catch {
       setUsageError('Erro ao processar a requisição com a IA. Tente novamente.');
     } finally {
@@ -123,6 +139,32 @@ export default function SettingsApi() {
   const totalCost = usage?.total_cost ?? 0;
   const avgCost = daily.length > 0 ? totalCost / daily.length : 0;
   const peakCost = daily.length > 0 ? Math.max(...daily.map((d) => d.cost)) : 0;
+  const chartWidth = 720;
+  const chartHeight = 240;
+  const chartPadding = { top: 16, right: 16, bottom: 32, left: 56 };
+  const chartMax = Math.max(1, Math.ceil(Math.max(0, ...daily.map((d) => d.cost))));
+  const chartInnerWidth = chartWidth - chartPadding.left - chartPadding.right;
+  const chartInnerHeight = chartHeight - chartPadding.top - chartPadding.bottom;
+  const chartPoints: ChartPoint[] = daily.map((item, index) => {
+    const x = daily.length > 1
+      ? chartPadding.left + (index / (daily.length - 1)) * chartInnerWidth
+      : chartPadding.left + chartInnerWidth / 2;
+    const y = chartPadding.top + chartInnerHeight - (
+      chartMax > 0 ? (item.cost / chartMax) * chartInnerHeight : 0
+    );
+    return { ...item, x, y };
+  });
+  const chartPolyline = chartPoints.map((point) => `${point.x},${point.y}`).join(' ');
+
+  function formatCost(value: number) {
+    if (!Number.isFinite(value) || value === 0) return '$ 0.00';
+    const decimals = Math.abs(value) < 0.01 ? 6 : 2;
+    return `$ ${value.toFixed(decimals)}`;
+  }
+
+  function formatShortDate(date: string) {
+    return `${date.slice(8, 10)}/${date.slice(5, 7)}`;
+  }
 
   return (
     <div>
@@ -189,7 +231,7 @@ export default function SettingsApi() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <StatCard
             label="Custo total (mês)"
-            value={`$ ${totalCost.toFixed(2)}`}
+            value={formatCost(totalCost)}
             icon={Wallet}
             accent="bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-300"
           />
@@ -201,7 +243,7 @@ export default function SettingsApi() {
           />
           <StatCard
             label="Pico diário"
-            value={`$ ${peakCost.toFixed(2)}`}
+            value={formatCost(peakCost)}
             icon={TrendingUp}
             accent="bg-brand-50 text-brand-600 dark:bg-brand-950/40 dark:text-brand-300"
           />
@@ -243,26 +285,131 @@ export default function SettingsApi() {
           </div>
         ) : (
           <>
+            <div className="mb-8">
+              <div className="flex items-center justify-between gap-3 mb-3">
+                <div>
+                  <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100">
+                    Evolução do consumo
+                  </h3>
+                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
+                    Custo diário em USD
+                  </p>
+                </div>
+                <span className="text-xs text-slate-400 dark:text-slate-500">
+                  Pico: {formatCost(peakCost)}
+                </span>
+              </div>
+
+              <div className="relative w-full overflow-x-auto">
+                <svg
+                  viewBox={`0 0 ${chartWidth} ${chartHeight}`}
+                  className="w-full min-w-[560px] h-60"
+                  role="img"
+                  aria-label="Linha de evolução do consumo diário"
+                >
+                  {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
+                    const y = chartPadding.top + chartInnerHeight * (1 - ratio);
+                    const value = chartMax * ratio;
+                    return (
+                      <g key={ratio}>
+                        <line
+                          x1={chartPadding.left}
+                          x2={chartWidth - chartPadding.right}
+                          y1={y}
+                          y2={y}
+                          className="stroke-slate-200 dark:stroke-slate-800"
+                          strokeDasharray="3 5"
+                        />
+                        <text
+                          x={chartPadding.left - 10}
+                          y={y + 4}
+                          textAnchor="end"
+                          className="fill-slate-400 dark:fill-slate-500 text-[11px]"
+                        >
+                          {formatCost(value)}
+                        </text>
+                      </g>
+                    );
+                  })}
+
+                  {chartPoints.length > 1 && (
+                    <polyline
+                      points={chartPolyline}
+                      fill="none"
+                      className="stroke-brand-500 dark:stroke-brand-400"
+                      strokeWidth="3"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  )}
+
+                  {chartPoints.map((point) => (
+                    <g key={point.date}>
+                      <title>{`${point.date}: ${formatCost(point.cost)}`}</title>
+                      <circle
+                        cx={point.x}
+                        cy={point.y}
+                        r="4"
+                        className="fill-white stroke-brand-600 dark:fill-slate-900 dark:stroke-brand-400"
+                        strokeWidth="3"
+                        onMouseEnter={() => setHoveredPoint(point)}
+                        onMouseLeave={() => setHoveredPoint(null)}
+                        onFocus={() => setHoveredPoint(point)}
+                        onBlur={() => setHoveredPoint(null)}
+                        tabIndex={0}
+                        role="img"
+                      />
+                      <text
+                        x={point.x}
+                        y={chartHeight - 10}
+                        textAnchor="middle"
+                        className="fill-slate-400 dark:fill-slate-500 text-[10px]"
+                      >
+                        {formatShortDate(point.date)}
+                      </text>
+                    </g>
+                  ))}
+                </svg>
+                {hoveredPoint && (
+                  <div
+                    className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-full rounded-md bg-slate-900 px-2.5 py-1.5 text-xs text-white shadow-lg whitespace-nowrap"
+                    style={{
+                      left: `${(hoveredPoint.x / chartWidth) * 100}%`,
+                      top: `${(hoveredPoint.y / chartHeight) * 100}%`,
+                    }}
+                  >
+                    <div className="font-medium">{hoveredPoint.date}</div>
+                    <div className="text-slate-300">{formatCost(hoveredPoint.cost)}</div>
+                  </div>
+                )}
+              </div>
+            </div>
+
             <div className="flex items-end gap-1.5 sm:gap-3 h-56 px-1 overflow-x-auto">
               {daily.map((d) => {
-                const heightPct = Math.max(2, Math.round((d.cost / maxCost) * 100));
+                const isPositive = d.cost > 0;
+                const heightPct = isPositive
+                  ? Math.max(6, Math.round((d.cost / maxCost) * 100))
+                  : 0;
                 return (
                   <div
                     key={d.date}
                     className="flex-1 min-w-[24px] flex flex-col items-center gap-2"
-                    title={`${d.date}: $${d.cost.toFixed(4)}`}
+                    title={`${d.date}: ${formatCost(d.cost)}`}
                   >
                     <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                      ${d.cost.toFixed(2)}
+                      {formatCost(d.cost)}
                     </div>
                     <div className="w-full flex-1 flex items-end">
                       <div
-                        className="w-full rounded-t-md bg-gradient-to-t from-brand-600 to-brand-400 hover:from-brand-700 hover:to-brand-500 transition-all"
+                        className={`w-full rounded-t-md bg-gradient-to-t from-brand-600 to-brand-400 hover:from-brand-700 hover:to-brand-500 transition-all ${
+                          isPositive ? '' : 'hidden'
+                        }`}
                         style={{ height: `${heightPct}%` }}
                       />
                     </div>
                     <div className="text-xs text-slate-500 dark:text-slate-400">
-                      {d.date.slice(8)}
+                      {formatShortDate(d.date)}
                     </div>
                   </div>
                 );
@@ -270,9 +417,9 @@ export default function SettingsApi() {
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6 pt-5 border-t border-slate-100 dark:border-slate-800">
-              <MiniStat label="Média diária" value={`$ ${avgCost.toFixed(2)}`} />
-              <MiniStat label="Pico" value={`$ ${peakCost.toFixed(2)}`} />
-              <MiniStat label="Total no mês" value={`$ ${totalCost.toFixed(2)}`} />
+              <MiniStat label="Média diária" value={formatCost(avgCost)} />
+              <MiniStat label="Pico" value={formatCost(peakCost)} />
+              <MiniStat label="Total no mês" value={formatCost(totalCost)} />
               <MiniStat
                 label="Período"
                 value={
