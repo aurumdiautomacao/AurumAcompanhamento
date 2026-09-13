@@ -16,6 +16,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { Badge } from './ui';
+import { APP_VERSION } from '../lib/appVersion';
 
 const navItems = [
   { to: '/', label: 'Central de Notícias', icon: Newspaper, end: true },
@@ -85,6 +86,14 @@ export default function Layout({ children }: { children: ReactNode }) {
           </button>
           <div className="px-3 py-2 text-xs text-brand-400">
             © {new Date().getFullYear()} Aurum DI
+          </div>
+          <div className="mx-3 mb-2 rounded-md border border-brand-800 bg-brand-900/60 px-3 py-2">
+            <div className="text-[10px] uppercase tracking-wide text-brand-400">
+              Versão do sistema
+            </div>
+            <div className="mt-0.5 font-mono text-sm font-semibold text-gold-400">
+              v{APP_VERSION}
+            </div>
           </div>
         </div>
       </aside>
