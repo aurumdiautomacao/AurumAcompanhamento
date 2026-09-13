@@ -22,6 +22,7 @@ import {
   AlignLeft,
   Megaphone,
   Pencil,
+  HelpCircle,
 } from 'lucide-react';
 import {
   supabase,
@@ -30,7 +31,9 @@ import {
   type ConteudoGerado,
   type PostGerado,
   type TopicoEstrategico,
+  type TopicoEditLogEntry,
 } from '../lib/supabaseClient';
+import { useAuth } from '../context/AuthContext';
 import { Badge, Card, EmptyState, ErrorState, PageHeader, Spinner } from '../components/ui';
 
 type PostTab = 'instagram' | 'linkedin';
@@ -48,6 +51,7 @@ export default function ApprovalCenter() {
   const [detailPost, setDetailPost] = useState<PostGerado | null>(null);
   const [savedScoreKey, setSavedScoreKey] = useState<string | null>(null);
   const [savingScoreKey, setSavingScoreKey] = useState<string | null>(null);
+  const { user } = useAuth();
 
   async function updateTopicoScore(conteudoId: number, topicoIndex: number, newScore: number) {
     const clamped = Math.max(0, Math.min(10, newScore));
@@ -56,14 +60,50 @@ export default function ApprovalCenter() {
     if (!report) return;
 
     const currentTopicos = normalizeTopicos(report.topicos_estrategicos);
+    const oldScore = currentTopicos[topicoIndex]?.pontuacao_relevancia ?? 0;
+    const userEmail = user?.email ?? 'desconhecido';
+    const now = new Date().toISOString();
+
     const updatedTopicos = currentTopicos.map((t, i) =>
-      i === topicoIndex ? { ...t, pontuacao_relevancia: clamped } : t,
+      i === topicoIndex
+        ? {
+            ...t,
+            pontuacao_relevancia: clamped,
+            editado: true,
+            editado_por: userEmail,
+            editado_em: now,
+          }
+        : t,
     );
+
+    const currentEdited = Array.isArray(report.topicos_editados)
+      ? (report.topicos_editados as number[])
+      : [];
+    const newEdited = Array.from(new Set([...currentEdited, topicoIndex]));
+
+    const currentLog = Array.isArray(report.topicos_editados_log)
+      ? (report.topicos_editados_log as TopicoEditLogEntry[])
+      : [];
+    const logEntry: TopicoEditLogEntry = {
+      topico_index: topicoIndex,
+      tema_macro: currentTopicos[topicoIndex]?.tema_macro ?? '',
+      pontuacao_anterior: oldScore,
+      pontuacao_nova: clamped,
+      usuario: userEmail,
+      alterado_em: now,
+    };
+    const newLog = [...currentLog, logEntry];
 
     setRelatorios((prev) =>
       prev.map((r) =>
         r.id === conteudoId
-          ? { ...r, topicos_estrategicos: updatedTopicos }
+          ? {
+              ...r,
+              topicos_estrategicos: updatedTopicos,
+              topicos_editados: newEdited,
+              topicos_editados_usuario: userEmail,
+              topicos_editados_log: newLog,
+            }
           : r,
       ),
     );
@@ -71,7 +111,12 @@ export default function ApprovalCenter() {
     setSavingScoreKey(key);
     const { error } = await supabase
       .from('conteudo_gerado')
-      .update({ topicos_estrategicos: updatedTopicos })
+      .update({
+        topicos_estrategicos: updatedTopicos,
+        topicos_editados: newEdited,
+        topicos_editados_usuario: userEmail,
+        topicos_editados_log: newLog,
+      })
       .eq('id', conteudoId);
     setSavingScoreKey(null);
 
@@ -80,7 +125,13 @@ export default function ApprovalCenter() {
       setRelatorios((prev) =>
         prev.map((r) =>
           r.id === conteudoId
-            ? { ...r, topicos_estrategicos: currentTopicos }
+            ? {
+                ...r,
+                topicos_estrategicos: currentTopicos,
+                topicos_editados: currentEdited,
+                topicos_editados_usuario: report.topicos_editados_usuario,
+                topicos_editados_log: currentLog,
+              }
             : r,
         ),
       );
@@ -97,7 +148,7 @@ export default function ApprovalCenter() {
     const { data, error } = await supabase
       .from('conteudo_gerado')
       .select(
-        'id, relatorio_tendencias, topicos_estrategicos, sugestoes_pautas, created_at',
+        'id, relatorio_tendencias, topicos_estrategicos, sugestoes_pautas, topicos_editados, topicos_editados_usuario, topicos_editados_log, created_at',
       )
       .order('created_at', { ascending: false })
       .limit(50);
@@ -166,6 +217,9 @@ export default function ApprovalCenter() {
   const approvedCount = selectedPosts.filter((p) => (p.status ?? 'pendente') === 'aprovado').length;
   const pendingCount = selectedPosts.length - approvedCount;
   const activeTabPosts = postTab === 'instagram' ? igPosts : liPosts;
+  const editedTopicos = Array.isArray(selected?.topicos_editados)
+    ? (selected.topicos_editados as number[])
+    : [];
 
   return (
     <div>
@@ -287,6 +341,7 @@ export default function ApprovalCenter() {
                 <RadarEstrategico
                   topicos={topicos}
                   conteudoId={selected.id}
+                  editedTopicos={editedTopicos}
                   onUpdateScore={updateTopicoScore}
                   savingScoreKey={savingScoreKey}
                   savedScoreKey={savedScoreKey}
@@ -843,17 +898,20 @@ const tierConfig: Record<
 function RadarEstrategico({
   topicos,
   conteudoId,
+  editedTopicos,
   onUpdateScore,
   savingScoreKey,
   savedScoreKey,
 }: {
   topicos: TopicoEstrategico[];
   conteudoId: number;
+  editedTopicos: number[];
   onUpdateScore: (conteudoId: number, topicoIndex: number, newScore: number) => void;
   savingScoreKey: string | null;
   savedScoreKey: string | null;
 }) {
   const [open, setOpen] = useState(true);
+  const [helpOpen, setHelpOpen] = useState(false);
   const indexed = topicos.map((t, originalIndex) => ({ topico: t, originalIndex }));
   const sorted = [...indexed].sort(
     (a, b) => (b.topico.pontuacao_relevancia ?? 0) - (a.topico.pontuacao_relevancia ?? 0),
@@ -861,25 +919,87 @@ function RadarEstrategico({
 
   return (
     <Card className="overflow-hidden">
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors"
-      >
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-brand-600 flex items-center justify-center">
-            <Radar size={16} className="text-white" />
+      <div className="relative">
+        <button
+          onClick={() => setOpen((v) => !v)}
+          className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors"
+        >
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-brand-600 flex items-center justify-center">
+              <Radar size={16} className="text-white" />
+            </div>
+            <div className="text-left">
+              <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">
+                Tópicos Estratégicos
+              </h2>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                {topicos.length} tópicos clusterizados · clique no lápis para calibrar a nota
+              </p>
+            </div>
           </div>
-          <div className="text-left">
-            <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">
-              Tópicos Estratégicos
-            </h2>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">
-              {topicos.length} tópicos clusterizados · clique no lápis para calibrar a nota
-            </p>
+          <div className="flex items-center gap-2">
+            <span
+              role="button"
+              tabIndex={0}
+              onClick={(e) => { e.stopPropagation(); setHelpOpen((v) => !v); }}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); setHelpOpen((v) => !v); } }}
+              className="p-1 rounded-full text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              title="O que significa cada nota?"
+            >
+              <HelpCircle size={18} />
+            </span>
+            {open ? <ChevronUp size={18} className="text-slate-400" /> : <ChevronDown size={18} className="text-slate-400" />}
           </div>
-        </div>
-        {open ? <ChevronUp size={18} className="text-slate-400" /> : <ChevronDown size={18} className="text-slate-400" />}
-      </button>
+        </button>
+
+        {helpOpen && (
+          <>
+            <div className="fixed inset-0 z-10" onClick={() => setHelpOpen(false)} />
+            <div className="absolute right-5 top-full mt-1 z-20 w-80 max-w-[calc(100vw-2.5rem)] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Legenda das notas</h3>
+                <button onClick={() => setHelpOpen(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                  <X size={15} />
+                </button>
+              </div>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                A pontuação de relevância (0 a 10) representa o peso estratégico de cada assunto. Quanto maior a nota, maior a relevância para a estratégia de conteúdo.
+              </p>
+              <div className="space-y-2.5">
+                <div className="flex items-start gap-2.5">
+                  <span className="inline-flex items-center justify-center min-w-[28px] h-6 px-1.5 rounded text-xs font-bold border bg-gold-500 text-brand-950 border-gold-600 shrink-0">8-10</span>
+                  <div>
+                    <div className="text-[12px] font-semibold text-gold-700 dark:text-gold-300">Tese Estratégica</div>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">Alta relevância. Assuntos centrais que devem orientar a narrativa e merecer destaque imediato nas próximas pautas.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2.5">
+                  <span className="inline-flex items-center justify-center min-w-[28px] h-6 px-1.5 rounded text-xs font-bold border bg-brand-500 text-white border-brand-600 shrink-0">5-7</span>
+                  <div>
+                    <div className="text-[12px] font-semibold text-brand-700 dark:text-brand-300">Monitoramento</div>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">Relevância média. Vale acompanhar a evolução do assunto e preparar conteúdo caso ganhe força.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2.5">
+                  <span className="inline-flex items-center justify-center min-w-[28px] h-6 px-1.5 rounded text-xs font-bold border bg-slate-400 text-white border-slate-500 shrink-0">0-4</span>
+                  <div>
+                    <div className="text-[12px] font-semibold text-slate-600 dark:text-slate-300">Ruído</div>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">Baixa relevância. Informação de fundo que não exige ação no momento, mas fica registrada para referência.</p>
+                  </div>
+                </div>
+              </div>
+              <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center gap-1.5">
+                <span className="inline-flex items-center justify-center w-5 h-5 rounded border border-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 shrink-0">
+                  <CheckCircle2 size={11} className="text-emerald-500" />
+                </span>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">
+                  Bloco verde indica que a nota foi calibrada manualmente por um usuário.
+                </p>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
 
       {open && (
         <div className="px-5 pb-5 pt-2 border-t border-slate-100 dark:border-slate-800">
@@ -893,6 +1013,7 @@ function RadarEstrategico({
                   topico={topico}
                   conteudoId={conteudoId}
                   topicoIndex={originalIndex}
+                  wasEdited={editedTopicos.includes(originalIndex) || !!topico.editado}
                   onUpdateScore={onUpdateScore}
                   isSaving={savingScoreKey === `${conteudoId}-${originalIndex}`}
                   justSaved={savedScoreKey === `${conteudoId}-${originalIndex}`}
@@ -910,6 +1031,7 @@ function TopicoCard({
   topico,
   conteudoId,
   topicoIndex,
+  wasEdited,
   onUpdateScore,
   isSaving,
   justSaved,
@@ -917,6 +1039,7 @@ function TopicoCard({
   topico: TopicoEstrategico;
   conteudoId: number;
   topicoIndex: number;
+  wasEdited: boolean;
   onUpdateScore: (conteudoId: number, topicoIndex: number, newScore: number) => void;
   isSaving: boolean;
   justSaved: boolean;
@@ -959,8 +1082,12 @@ function TopicoCard({
   return (
     <div
       onClick={isClickable ? () => setExpanded((v) => !v) : undefined}
-      className={`w-full text-left rounded-lg border ${cfg.card} p-3 transition-all ${
-        isClickable ? 'cursor-pointer hover:shadow-md hover:border-slate-300 dark:hover:border-slate-700' : 'cursor-default'
+      className={`w-full text-left rounded-lg border p-3 transition-all ${
+        wasEdited
+          ? 'border-emerald-400 bg-emerald-50/60 dark:bg-emerald-950/20 dark:border-emerald-700/60'
+          : `${cfg.card}`
+      } ${
+        isClickable ? 'cursor-pointer hover:shadow-md' : 'cursor-default'
       }`}
     >
       <div className="flex items-start justify-between gap-2 mb-2">
@@ -1048,6 +1175,13 @@ function TopicoCard({
         <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium mt-1.5 flex items-center gap-1">
           <CheckCircle2 size={12} />
           Nota calibrada com sucesso
+        </div>
+      )}
+
+      {wasEdited && !justSaved && (
+        <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium mt-1.5 flex items-center gap-1">
+          <CheckCircle2 size={12} />
+          Editado{topico.editado_por ? ` por ${topico.editado_por}` : ''}
         </div>
       )}
     </div>

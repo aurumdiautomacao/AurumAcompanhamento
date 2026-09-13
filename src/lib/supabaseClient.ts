@@ -54,6 +54,18 @@ export type TopicoEstrategico = {
   pontuacao_relevancia: number;
   justificativa_pontuacao?: string;
   sintese?: string;
+  editado?: boolean;
+  editado_por?: string;
+  editado_em?: string;
+};
+
+export type TopicoEditLogEntry = {
+  topico_index: number;
+  tema_macro: string;
+  pontuacao_anterior: number;
+  pontuacao_nova: number;
+  usuario: string;
+  alterado_em: string;
 };
 
 export type SugestaoPauta = {
@@ -68,6 +80,9 @@ export type ConteudoGerado = {
   posts_linkedin?: string[] | string;
   topicos_estrategicos?: TopicoEstrategico[] | string | null;
   sugestoes_pautas?: SugestaoPauta[] | string | null;
+  topicos_editados?: number[] | string | null;
+  topicos_editados_usuario?: string | null;
+  topicos_editados_log?: TopicoEditLogEntry[] | string | null;
   created_at: string;
 };
 
