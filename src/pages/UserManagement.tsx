@@ -115,78 +115,119 @@ export default function UserManagement() {
         ) : filtered.length === 0 ? (
           <EmptyState message="Nenhum usuário encontrado." />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wide">
-                <tr>
-                  <th className="text-left font-medium px-4 py-3">Usuário</th>
-                  <th className="text-left font-medium px-4 py-3">Perfil</th>
-                  <th className="text-left font-medium px-4 py-3">Cadastro</th>
-                  <th className="text-right font-medium px-4 py-3">Ações</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                {filtered.map((p) => (
-                  <tr
-                    key={p.id}
-                    className="hover:bg-slate-50 dark:hover:bg-slate-800/40"
-                  >
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-brand-100 text-brand-700 dark:bg-brand-900 dark:text-brand-200 flex items-center justify-center text-sm font-semibold">
-                          {(p.email ?? '?').charAt(0).toUpperCase()}
-                        </div>
-                        <div>
-                          <div className="font-medium text-slate-800 dark:text-slate-100">
-                            {p.email ?? '—'}
-                          </div>
-                          <div className="text-xs text-slate-400 dark:text-slate-500">
-                            ID: {p.id.slice(0, 8)}…
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <Badge status={p.role} />
-                        {p.role === 'admin' && (
-                          <ShieldCheck
-                            size={14}
-                            className="text-brand-500"
-                          />
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-slate-500 dark:text-slate-400 whitespace-nowrap">
-                      {new Date(p.created_at).toLocaleDateString('pt-BR')}
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <div className="inline-flex items-center gap-2">
-                        {isAdmin && (
-                          <>
-                            <button
-                              className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800"
-                              title="Editar usuário"
-                            >
-                              <Pencil size={13} />
-                              Editar
-                            </button>
-                            <button
-                              className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40"
-                              title="Desativar usuário"
-                            >
-                              <Ban size={13} />
-                              Desativar
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </td>
+          <>
+            {/* Desktop table */}
+            <div className="hidden sm:block overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wide">
+                  <tr>
+                    <th className="text-left font-medium px-4 py-3">Usuário</th>
+                    <th className="text-left font-medium px-4 py-3">Perfil</th>
+                    <th className="text-left font-medium px-4 py-3">Cadastro</th>
+                    <th className="text-right font-medium px-4 py-3">Ações</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                  {filtered.map((p) => (
+                    <tr
+                      key={p.id}
+                      className="hover:bg-slate-50 dark:hover:bg-slate-800/40"
+                    >
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-full bg-brand-100 text-brand-700 dark:bg-brand-900 dark:text-brand-200 flex items-center justify-center text-sm font-semibold">
+                            {(p.email ?? '?').charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <div className="font-medium text-slate-800 dark:text-slate-100">
+                              {p.email ?? '—'}
+                            </div>
+                            <div className="text-xs text-slate-400 dark:text-slate-500">
+                              ID: {p.id.slice(0, 8)}…
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <Badge status={p.role} />
+                          {p.role === 'admin' && (
+                            <ShieldCheck
+                              size={14}
+                              className="text-brand-500"
+                            />
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                        {new Date(p.created_at).toLocaleDateString('pt-BR')}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <div className="inline-flex items-center gap-2">
+                          {isAdmin && (
+                            <>
+                              <button
+                                className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800"
+                                title="Editar usuário"
+                              >
+                                <Pencil size={13} />
+                                Editar
+                              </button>
+                              <button
+                                className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40"
+                                title="Desativar usuário"
+                              >
+                                <Ban size={13} />
+                                Desativar
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile cards */}
+            <div className="sm:hidden divide-y divide-slate-100 dark:divide-slate-800">
+              {filtered.map((p) => (
+                <div key={p.id} className="px-4 py-3 flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-brand-100 text-brand-700 dark:bg-brand-900 dark:text-brand-200 flex items-center justify-center text-sm font-semibold shrink-0">
+                    {(p.email ?? '?').charAt(0).toUpperCase()}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="font-medium text-slate-800 dark:text-slate-100 truncate">
+                      {p.email ?? '—'}
+                    </div>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Badge status={p.role} />
+                      <span className="text-xs text-slate-400 dark:text-slate-500">
+                        {new Date(p.created_at).toLocaleDateString('pt-BR')}
+                      </span>
+                    </div>
+                  </div>
+                  {isAdmin && (
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        className="p-1.5 rounded-lg text-slate-500 border border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"
+                        title="Editar usuário"
+                      >
+                        <Pencil size={14} />
+                      </button>
+                      <button
+                        className="p-1.5 rounded-lg text-rose-500 border border-rose-200 dark:border-rose-900 hover:bg-rose-50 dark:hover:bg-rose-950/40"
+                        title="Desativar usuário"
+                      >
+                        <Ban size={14} />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </Card>
 

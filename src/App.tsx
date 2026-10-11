@@ -9,6 +9,7 @@ import ApprovalCenter from './pages/ApprovalCenter';
 import FontesNoticias from './pages/FontesNoticias';
 import UserManagement from './pages/UserManagement';
 import SettingsApi from './pages/SettingsApi';
+import WeeklySummary from './pages/WeeklySummary';
 
 export default function App() {
   return (
@@ -63,6 +64,16 @@ export default function App() {
                 <ProtectedRoute>
                   <Layout>
                     <SettingsApi />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/fechamento-semanal"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <WeeklySummary />
                   </Layout>
                 </ProtectedRoute>
               }

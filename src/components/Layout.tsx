@@ -14,6 +14,7 @@ import {
   Rss,
   PanelLeft,
   PanelLeftClose,
+  CalendarRange,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -27,6 +28,7 @@ const navItems = [
   { to: '/', label: 'Central de Notícias', icon: Newspaper, end: true },
   { to: '/fontes', label: 'Fontes de Notícias', icon: Rss, end: false },
   { to: '/aprovacao', label: 'Central de Aprovação', icon: CheckSquare, end: false },
+  { to: '/fechamento-semanal', label: 'Fechamento Semanal', icon: CalendarRange, end: false },
   { to: '/usuarios', label: 'Gestão de Usuários', icon: Users, end: false },
   { to: '/configuracoes', label: 'Configurações & API', icon: Settings, end: false },
 ];
@@ -140,7 +142,7 @@ export default function Layout({ children }: { children: ReactNode }) {
       )}
 
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-20">
+        <header className="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-3 sm:px-6 sticky top-0 z-20">
           <button
             onClick={() => setMobileOpen((v) => !v)}
             className="lg:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300"
@@ -153,7 +155,7 @@ export default function Layout({ children }: { children: ReactNode }) {
             Inteligência de mercado & briefings
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             <button
               onClick={toggleTheme}
               className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors"
@@ -166,13 +168,13 @@ export default function Layout({ children }: { children: ReactNode }) {
             <div className="relative">
               <button
                 onClick={() => setMenuOpen((v) => !v)}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                className="flex items-center gap-2 px-2 sm:px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               >
                 <div className="w-8 h-8 rounded-full bg-gold-100 text-gold-800 dark:bg-gold-900 dark:text-gold-200 flex items-center justify-center text-sm font-semibold">
                   {(user?.email ?? '?').charAt(0).toUpperCase()}
                 </div>
                 <div className="hidden sm:block text-left">
-                  <div className="text-sm font-medium text-slate-800 dark:text-slate-100 leading-tight truncate max-w-[180px]">
+                  <div className="text-sm font-medium text-slate-800 dark:text-slate-100 leading-tight truncate max-w-[120px] sm:max-w-[180px]">
                     {user?.email}
                   </div>
                   <div className="text-xs text-slate-400 leading-tight">
@@ -188,7 +190,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                     className="fixed inset-0 z-30"
                     onClick={() => setMenuOpen(false)}
                   />
-                  <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 shadow-lg z-40 py-1">
+                  <div className="absolute right-0 mt-2 w-56 max-w-[calc(100vw-1.5rem)] bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 shadow-lg z-40 py-1">
                     <div className="px-4 py-2 border-b border-slate-100 dark:border-slate-800">
                       <div className="text-sm font-medium text-slate-800 dark:text-slate-100 truncate">
                         {user?.email}
@@ -212,7 +214,7 @@ export default function Layout({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-x-hidden">{children}</main>
+        <main className="flex-1 p-3 sm:p-6 lg:p-8 overflow-x-hidden">{children}</main>
       </div>
     </div>
   );

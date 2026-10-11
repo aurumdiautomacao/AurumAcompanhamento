@@ -128,6 +128,42 @@ export type ApiSettings = {
   updated_at: string;
 };
 
+export type TopicoSemanal = {
+  tema: string;
+  justificativa: string;
+  nota: number;
+};
+
+export type PostLinkedIn = {
+  tema: string;
+  conteudo: string;
+};
+
+export type PostInstagram = {
+  tema: string;
+  roteiro: string;
+};
+
+export type ReferenciaDiaria = {
+  id: string;
+  data: string;
+};
+
+export type ConteudoSemanal = {
+  id: string;
+  ciclo_inicio: string;
+  ciclo_fim: string;
+  relatorio_evolutivo: string | null;
+  topicos_estrategicos: TopicoSemanal[] | null;
+  posts_linkedin: PostLinkedIn[] | null;
+  posts_instagram: PostInstagram[] | null;
+  referencias_diarias: ReferenciaDiaria[] | null;
+  status: string | null;
+  nota_semanal: number | null;
+  created_at: string;
+  updated_at: string | null;
+};
+
 export type Profile = {
   id: string;
   email: string | null;

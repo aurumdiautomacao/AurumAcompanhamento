@@ -1,0 +1,2 @@
+[functions.get_openai_usage]
+verify_jwt = true
