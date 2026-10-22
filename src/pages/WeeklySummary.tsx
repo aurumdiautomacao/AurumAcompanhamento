@@ -368,7 +368,7 @@ export default function WeeklySummary() {
             ) : semanais.length === 0 ? (
               <EmptyState message="Nenhum fechamento semanal encontrado." />
             ) : (
-              <ul className="divide-y divide-slate-100 dark:divide-slate-800 max-h-[60vh] lg:max-h-[calc(100vh-12rem)] overflow-y-auto">
+              <ul className="divide-y divide-slate-100 dark:divide-slate-800 max-h-64 sm:max-h-80 lg:max-h-[calc(100vh-12rem)] overflow-y-auto">
                 {semanais.map((s) => {
                   const statusKey = (s.status ?? 'pendente').toLowerCase();
                   const cfg = STATUS_CONFIG[statusKey] ?? STATUS_CONFIG.pendente;
@@ -417,7 +417,7 @@ export default function WeeklySummary() {
         {/* Detail */}
         <div className="lg:col-span-8 xl:col-span-9 space-y-5">
           {!selected ? (
-            <EmptyState message="Selecione um fechamento semanal à esquerda." />
+            <EmptyState message="Selecione um fechamento semanal na lista." />
           ) : (
             <>
               {/* Header card with date range + status */}
@@ -450,7 +450,7 @@ export default function WeeklySummary() {
 
               {/* Tabs */}
               <Card className="overflow-hidden">
-                <div className="flex border-b border-slate-100 dark:border-slate-800 overflow-x-auto">
+                <div className="flex border-b border-slate-100 dark:border-slate-800 overflow-x-auto overflow-y-hidden">
                   <TabButton
                     active={tab === 'evolucao'}
                     onClick={() => setTab('evolucao')}
@@ -1001,11 +1001,11 @@ function PostLinkedInDetailModal({
 }) {
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-2 sm:p-4 bg-black/50"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl"
+        className="w-full max-w-2xl max-h-[calc(100dvh-1rem)] sm:max-h-[90dvh] overflow-y-auto rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="sticky top-0 z-10 flex items-center justify-between gap-2 px-5 sm:px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900">
@@ -1069,11 +1069,11 @@ function PostInstagramDetailModal({
 }) {
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-2 sm:p-4 bg-black/50"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl"
+        className="w-full max-w-2xl max-h-[calc(100dvh-1rem)] sm:max-h-[90dvh] overflow-y-auto rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="sticky top-0 z-10 flex items-center justify-between gap-2 px-5 sm:px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900">
@@ -1210,11 +1210,11 @@ function ReferenciaDiariaModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-2 sm:p-4 bg-black/50"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl"
+        className="w-full max-w-3xl max-h-[calc(100dvh-1rem)] sm:max-h-[90dvh] overflow-y-auto rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

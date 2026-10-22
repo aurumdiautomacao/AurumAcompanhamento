@@ -3,8 +3,12 @@
 @tailwind utilities;
 
 @layer base {
+  /* Controles nativos (checkbox, date, scrollbar) seguem o tema do app, não o do sistema. */
   html {
-    color-scheme: light dark;
+    color-scheme: light;
+  }
+  html.dark {
+    color-scheme: dark;
   }
   /* Tokens auro-* (canais RGB, consumidos pelo tailwind.config.js) */
   :root {
