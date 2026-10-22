@@ -1,2 +1,5 @@
 [functions.get_openai_usage]
 verify_jwt = true
+
+[functions.solicitar_resumo_semanal]
+verify_jwt = true

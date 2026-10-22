@@ -36,6 +36,9 @@ import type {
 import { normalizeTopicos } from '../lib/supabaseClient';
 import { useAuth } from '../context/AuthContext';
 import { Badge, Card, EmptyState, ErrorState, PageHeader, Spinner } from '../components/ui';
+import { WeeklyCurationPanel } from '../components/features/semanal/WeeklyCurationPanel';
+import { WeeklyViewTabs, type WeeklyView } from '../components/features/semanal/WeeklyViewTabs';
+import { formatCycle, parseFlexibleDate } from '../lib/format';
 
 type Tab = 'evolucao' | 'linkedin' | 'instagram';
 
@@ -115,22 +118,28 @@ function normalizeReferencias(raw: unknown): ReferenciaDiaria[] {
   return [];
 }
 
+// parseFlexibleDate: aceita "aaaa-mm-dd" sem deslocar para UTC e o legado "dd/mm/aaaa"
+// de referencias_diarias.data.
 function formatDateRange(inicio: string, fim: string): string {
-  const i = new Date(inicio).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
-  const f = new Date(fim).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
-  return `${i} – ${f}`;
+  return formatCycle(inicio, fim);
 }
 
 function formatDateShort(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+  const date = parseFlexibleDate(dateStr);
+  return date
+    ? date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
+    : dateStr;
 }
 
 function formatDateFull(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('pt-BR', {
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric',
-  });
+  const date = parseFlexibleDate(dateStr);
+  return date
+    ? date.toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric',
+      })
+    : dateStr;
 }
 
 const STATUS_CONFIG: Record<string, { label: string; icon: typeof CheckCircle2; cls: string }> = {
@@ -159,6 +168,7 @@ export default function WeeklySummary() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [view, setView] = useState<WeeklyView>('montar');
   const [tab, setTab] = useState<Tab>('evolucao');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [notaDraft, setNotaDraft] = useState<number>(0);
@@ -245,6 +255,25 @@ export default function WeeklySummary() {
   const aprovadosCount = semanais.filter((s) => s.status === 'aprovado').length;
   const rejeitadosCount = semanais.filter((s) => s.status === 'rejeitado').length;
 
+  async function openSemanal(conteudoSemanalId: string) {
+    setView('resumos');
+    await load();
+    setSelectedId(conteudoSemanalId);
+  }
+
+  if (view === 'montar') {
+    return (
+      <div>
+        <PageHeader
+          title="Fechamento Semanal"
+          subtitle="Escolha os tópicos da semana; a IA gera o resumo só com eles"
+        />
+        <WeeklyViewTabs view={view} onChange={setView} />
+        <WeeklyCurationPanel canEdit={canEdit} onOpenSemanal={openSemanal} />
+      </div>
+    );
+  }
+
   return (
     <div>
       <PageHeader
@@ -261,6 +290,8 @@ export default function WeeklySummary() {
           </button>
         }
       />
+
+      <WeeklyViewTabs view={view} onChange={setView} />
 
       {/* Stats bar */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
