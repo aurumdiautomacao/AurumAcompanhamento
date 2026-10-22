@@ -472,7 +472,7 @@ export type Database = {
         };
         Returns: {
           "content": string;
-          "id": string;
+          "id": number;
           "metadata": Json;
           "similarity": number;
         }[];
