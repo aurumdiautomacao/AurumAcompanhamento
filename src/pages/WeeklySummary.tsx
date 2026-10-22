@@ -36,6 +36,8 @@ import type {
 import { normalizeTopicos } from '../lib/supabaseClient';
 import { useAuth } from '../context/AuthContext';
 import { Badge, Card, EmptyState, ErrorState, PageHeader, Spinner } from '../components/ui';
+import { WeeklyCurationPanel } from '../components/features/semanal/WeeklyCurationPanel';
+import { WeeklyViewTabs, type WeeklyView } from '../components/features/semanal/WeeklyViewTabs';
 import { formatCycle, parseFlexibleDate } from '../lib/format';
 
 type Tab = 'evolucao' | 'linkedin' | 'instagram';
@@ -166,6 +168,7 @@ export default function WeeklySummary() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [view, setView] = useState<WeeklyView>('montar');
   const [tab, setTab] = useState<Tab>('evolucao');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [notaDraft, setNotaDraft] = useState<number>(0);
@@ -252,6 +255,25 @@ export default function WeeklySummary() {
   const aprovadosCount = semanais.filter((s) => s.status === 'aprovado').length;
   const rejeitadosCount = semanais.filter((s) => s.status === 'rejeitado').length;
 
+  async function openSemanal(conteudoSemanalId: string) {
+    setView('resumos');
+    await load();
+    setSelectedId(conteudoSemanalId);
+  }
+
+  if (view === 'montar') {
+    return (
+      <div>
+        <PageHeader
+          title="Fechamento Semanal"
+          subtitle="Escolha os tópicos da semana; a IA gera o resumo só com eles"
+        />
+        <WeeklyViewTabs view={view} onChange={setView} />
+        <WeeklyCurationPanel canEdit={canEdit} onOpenSemanal={openSemanal} />
+      </div>
+    );
+  }
+
   return (
     <div>
       <PageHeader
@@ -268,6 +290,8 @@ export default function WeeklySummary() {
           </button>
         }
       />
+
+      <WeeklyViewTabs view={view} onChange={setView} />
 
       {/* Stats bar */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">

@@ -5,6 +5,17 @@ export default {
   theme: {
     extend: {
       colors: {
+        auro: {
+          primary: 'rgb(var(--auro-primary) / <alpha-value>)',
+          gold: 'rgb(var(--auro-gold) / <alpha-value>)',
+          surface: 'rgb(var(--auro-surface) / <alpha-value>)',
+          'surface-muted': 'rgb(var(--auro-surface-muted) / <alpha-value>)',
+          text: 'rgb(var(--auro-text) / <alpha-value>)',
+          'text-muted': 'rgb(var(--auro-text-muted) / <alpha-value>)',
+          success: 'rgb(var(--auro-success) / <alpha-value>)',
+          warning: 'rgb(var(--auro-warning) / <alpha-value>)',
+          danger: 'rgb(var(--auro-danger) / <alpha-value>)',
+        },
         brand: {
           50: '#f0f5fb',
           100: '#dbe7f3',

@@ -6,6 +6,29 @@
   html {
     color-scheme: light dark;
   }
+  /* Tokens auro-* (canais RGB, consumidos pelo tailwind.config.js) */
+  :root {
+    --auro-primary: 44 77 136;
+    --auro-gold: 143 84 26;
+    --auro-surface: 255 255 255;
+    --auro-surface-muted: 248 250 252;
+    --auro-text: 15 23 42;
+    --auro-text-muted: 71 85 105;
+    --auro-success: 4 120 87;
+    --auro-warning: 180 83 9;
+    --auro-danger: 190 18 60;
+  }
+  .dark {
+    --auro-primary: 143 172 212;
+    --auro-gold: 226 192 106;
+    --auro-surface: 15 23 42;
+    --auro-surface-muted: 2 6 23;
+    --auro-text: 241 245 249;
+    --auro-text-muted: 148 163 184;
+    --auro-success: 52 211 153;
+    --auro-warning: 251 191 36;
+    --auro-danger: 251 113 133;
+  }
   body {
     @apply bg-slate-50 text-slate-900 antialiased;
   }
