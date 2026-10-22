@@ -1,5 +1,7 @@
-// Tipos manuais de selecao_semanal (migration 20261022002441_cria_selecao_semanal do repo do DBA).
-// Substituir por Tables<'selecao_semanal'> quando os tipos forem gerados com `supabase gen types`.
+import type { Tables } from './database';
+
+// Linhas de selecao_semanal (migration 20261022002441_cria_selecao_semanal) a partir dos tipos
+// gerados, com status e topicos_selecionados (jsonb) estreitados após validação em parseSelecaoSemanal.
 
 export const SELECAO_STATUSES = ['rascunho', 'solicitado', 'gerando', 'concluido', 'erro'] as const;
 export type SelecaoStatus = (typeof SELECAO_STATUSES)[number];
@@ -20,24 +22,11 @@ export type TopicoCandidato = TopicoSelecionado & {
   key: string;
 };
 
-export type SemanalGerado = {
-  id: string;
-  status: string | null;
-  created_at: string;
-};
+export type SemanalGerado = Pick<Tables<'conteudo_semanal'>, 'id' | 'status' | 'created_at'>;
 
-export type SelecaoSemanal = {
-  id: string;
-  ciclo_inicio: string;
-  ciclo_fim: string;
-  topicos_selecionados: TopicoSelecionado[];
-  orientacao: string | null;
+export type SelecaoSemanal = Omit<Tables<'selecao_semanal'>, 'status' | 'topicos_selecionados'> & {
   status: SelecaoStatus;
-  erro_mensagem: string | null;
-  criado_por: string;
-  solicitado_em: string | null;
-  created_at: string;
-  updated_at: string;
+  topicos_selecionados: TopicoSelecionado[];
   semanal_gerado: SemanalGerado | null;
 };
 
@@ -85,7 +74,7 @@ function parseSemanalGerado(raw: unknown): SemanalGerado | null {
   return {
     id: candidate.id,
     status: optionalString(candidate.status),
-    created_at: typeof candidate.created_at === 'string' ? candidate.created_at : '',
+    created_at: typeof candidate.created_at === 'string' ? candidate.created_at : null,
   };
 }
 
