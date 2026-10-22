@@ -198,8 +198,8 @@ export default function FontesNoticias() {
 
       {/* Form modal */}
       {showForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
-          <Card className="w-full max-w-md p-6 relative">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-2 sm:p-4 bg-black/40">
+          <Card className="w-full max-w-md max-h-[calc(100dvh-1rem)] sm:max-h-[90dvh] overflow-y-auto p-5 sm:p-6 relative">
             <button
               onClick={closeForm}
               className="absolute top-4 right-4 p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"

@@ -31,16 +31,16 @@ export function PageHeader({
   action?: ReactNode;
 }) {
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 sm:mb-6">
       <div>
-        <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
+        <h1 className="text-xl sm:text-2xl font-semibold text-slate-900 dark:text-slate-100">
           {title}
         </h1>
         {subtitle && (
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{subtitle}</p>
         )}
       </div>
-      {action}
+      {action && <div className="shrink-0">{action}</div>}
     </div>
   );
 }

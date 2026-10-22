@@ -56,24 +56,39 @@ export default function Layout({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex">
+      {/* Mobile: gaveta fixa fora do fluxo. Desktop (lg): coluna sticky; "recolhida" só vale no desktop. */}
       <aside
-        className={`fixed lg:sticky lg:top-0 lg:self-start lg:h-screen lg:overflow-y-auto inset-y-0 left-0 z-40 bg-brand-950 text-brand-100 flex flex-col transform transition-all duration-200 relative ${
-          sidebarCollapsed ? 'w-64 lg:w-20' : 'w-64 lg:w-64'
+        className={`fixed inset-y-0 left-0 z-40 w-72 max-w-[85vw] overflow-y-auto bg-brand-950 text-brand-100 flex flex-col transform transition-all duration-200 lg:sticky lg:top-0 lg:self-start lg:h-screen lg:max-w-none ${
+          sidebarCollapsed ? 'lg:w-20' : 'lg:w-64'
         } ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
-        <div className={`h-16 flex items-center border-b border-brand-900 ${sidebarCollapsed ? 'justify-center px-3' : 'gap-2 px-5'}`}>
-          <div className={`shrink-0 ${sidebarCollapsed ? 'w-8 h-8' : 'w-[172px] h-10'}`}>
+        <div className={`h-16 flex items-center justify-between gap-2 border-b border-brand-900 px-5 ${sidebarCollapsed ? 'lg:justify-center lg:px-3' : ''}`}>
+          <div className={`shrink-0 w-[172px] h-10 ${sidebarCollapsed ? 'lg:w-8 lg:h-8' : ''}`}>
             <img
-              src={sidebarCollapsed ? SIDEBAR_COLLAPSED_LOGO : SIDEBAR_LOGO}
+              src={SIDEBAR_LOGO}
               alt="Aurum DI"
-              className="block h-full w-full object-contain"
+              className={`h-full w-full object-contain ${sidebarCollapsed ? 'block lg:hidden' : 'block'}`}
             />
+            {sidebarCollapsed && (
+              <img
+                src={SIDEBAR_COLLAPSED_LOGO}
+                alt="Aurum DI"
+                className="hidden lg:block h-full w-full object-contain"
+              />
+            )}
           </div>
+          <button
+            onClick={() => setMobileOpen(false)}
+            className="lg:hidden p-2 -mr-2 rounded-lg text-brand-100 hover:bg-brand-800 hover:text-white"
+            aria-label="Fechar menu"
+          >
+            <X size={20} />
+          </button>
         </div>
 
-        <nav className={`flex-1 py-4 space-y-1 ${sidebarCollapsed ? 'px-2' : 'px-3'}`}>
+        <nav className={`flex-1 py-4 space-y-1 px-3 ${sidebarCollapsed ? 'lg:px-2' : ''}`}>
           {navItems.map((item) => {
             const Icon = item.icon;
             return (
@@ -84,15 +99,15 @@ export default function Layout({ children }: { children: ReactNode }) {
                 onClick={() => setMobileOpen(false)}
                 title={sidebarCollapsed ? item.label : undefined}
                 className={({ isActive }) =>
-                  `flex items-center rounded-lg text-sm font-medium transition-colors ${sidebarCollapsed ? 'justify-center px-2.5 py-3' : 'gap-3 px-3 py-2.5'} ${
+                  `flex items-center gap-3 px-3 py-3 lg:py-2.5 rounded-lg text-sm font-medium transition-colors ${sidebarCollapsed ? 'lg:justify-center lg:gap-0 lg:px-2.5 lg:py-3' : ''} ${
                     isActive
                       ? 'bg-gold-500 text-brand-950'
                       : 'text-brand-100 hover:bg-brand-800 hover:text-white'
                   }`
                 }
               >
-                <Icon size={18} />
-                {!sidebarCollapsed && item.label}
+                <Icon size={18} className="shrink-0" />
+                <span className={sidebarCollapsed ? 'lg:hidden' : ''}>{item.label}</span>
               </NavLink>
             );
           })}
@@ -111,26 +126,26 @@ export default function Layout({ children }: { children: ReactNode }) {
           <button
             onClick={toggleTheme}
             title={sidebarCollapsed ? (theme === 'dark' ? 'Tema claro' : 'Tema escuro') : undefined}
-            className={`w-full flex items-center rounded-lg text-sm text-brand-100 hover:bg-brand-800 hover:text-white transition-colors ${sidebarCollapsed ? 'justify-center px-3 py-2' : 'gap-2 px-3 py-2'}`}
+            className={`w-full flex items-center gap-2 px-3 py-2.5 lg:py-2 rounded-lg text-sm text-brand-100 hover:bg-brand-800 hover:text-white transition-colors ${sidebarCollapsed ? 'lg:justify-center lg:gap-0' : ''}`}
           >
             {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
-            {!sidebarCollapsed && (theme === 'dark' ? 'Tema claro' : 'Tema escuro')}
+            <span className={sidebarCollapsed ? 'lg:hidden' : ''}>
+              {theme === 'dark' ? 'Tema claro' : 'Tema escuro'}
+            </span>
           </button>
-          {!sidebarCollapsed && (
-            <>
-              <div className="px-3 py-2 text-xs text-brand-400">
-                © {new Date().getFullYear()} Aurum DI
+          <div className={sidebarCollapsed ? 'lg:hidden' : ''}>
+            <div className="px-3 py-2 text-xs text-brand-400">
+              © {new Date().getFullYear()} Aurum DI
+            </div>
+            <div className="mx-3 mb-2 rounded-md border border-brand-800 bg-brand-900/60 px-3 py-2">
+              <div className="text-[10px] uppercase tracking-wide text-brand-400">
+                Versão do sistema
               </div>
-              <div className="mx-3 mb-2 rounded-md border border-brand-800 bg-brand-900/60 px-3 py-2">
-                <div className="text-[10px] uppercase tracking-wide text-brand-400">
-                  Versão do sistema
-                </div>
-                <div className="mt-0.5 font-mono text-sm font-semibold text-gold-400">
-                  v{APP_VERSION}
-                </div>
+              <div className="mt-0.5 font-mono text-sm font-semibold text-gold-400">
+                v{APP_VERSION}
               </div>
-            </>
-          )}
+            </div>
+          </div>
         </div>
       </aside>
 
@@ -138,18 +153,27 @@ export default function Layout({ children }: { children: ReactNode }) {
         <div
           className="fixed inset-0 z-30 bg-black/40 lg:hidden"
           onClick={() => setMobileOpen(false)}
+          aria-hidden="true"
         />
       )}
 
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-3 sm:px-6 sticky top-0 z-20">
-          <button
-            onClick={() => setMobileOpen((v) => !v)}
-            className="lg:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300"
-            aria-label="Abrir menu"
-          >
-            {mobileOpen ? <X size={20} /> : <Menu size={20} />}
-          </button>
+        <header className="h-14 sm:h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2 px-3 sm:px-6 sticky top-0 z-20">
+          <div className="flex items-center gap-2 min-w-0 lg:hidden">
+            <button
+              onClick={() => setMobileOpen((v) => !v)}
+              className="p-2 -ml-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300"
+              aria-label={mobileOpen ? 'Fechar menu' : 'Abrir menu'}
+              aria-expanded={mobileOpen}
+            >
+              {mobileOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
+            <img
+              src={SIDEBAR_COLLAPSED_LOGO}
+              alt="Aurum DI"
+              className="h-7 w-7 shrink-0 object-contain"
+            />
+          </div>
 
           <div className="hidden lg:block text-sm font-medium text-slate-500 dark:text-slate-400">
             Inteligência de mercado & briefings
@@ -214,7 +238,7 @@ export default function Layout({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        <main className="flex-1 p-3 sm:p-6 lg:p-8 overflow-x-hidden">{children}</main>
+        <main className="flex-1 min-w-0 px-3 py-4 sm:p-6 lg:p-8 overflow-x-hidden">{children}</main>
       </div>
     </div>
   );

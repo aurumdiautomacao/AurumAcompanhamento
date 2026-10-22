@@ -306,8 +306,8 @@ function CreateUserModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
-      <Card className="w-full max-w-md p-6">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-2 sm:p-4 bg-black/40">
+      <Card className="w-full max-w-md max-h-[calc(100dvh-1rem)] sm:max-h-[90dvh] overflow-y-auto p-5 sm:p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">
             Criar novo usuário

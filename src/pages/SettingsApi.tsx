@@ -303,7 +303,7 @@ export default function SettingsApi() {
               <div className="relative w-full">
                 <svg
                   viewBox={`0 0 ${chartWidth} ${chartHeight}`}
-                  className="block w-full h-[300px] sm:h-[360px]"
+                  className="block w-full h-56 sm:h-72 lg:h-96"
                   role="img"
                   aria-label="Linha de evolução do consumo diário"
                 >

@@ -280,7 +280,7 @@ export default function ApprovalCenter() {
             ) : relatorios.length === 0 ? (
               <EmptyState message="Nenhum relatório gerado." />
             ) : (
-              <ul className="divide-y divide-slate-100 dark:divide-slate-800 max-h-[60vh] lg:max-h-[calc(100vh-12rem)] overflow-y-auto">
+              <ul className="divide-y divide-slate-100 dark:divide-slate-800 max-h-64 sm:max-h-80 lg:max-h-[calc(100vh-12rem)] overflow-y-auto">
                 {relatorios.map((r) => {
                   const count = posts.filter((p) => p.conteudo_gerado_id === r.id).length;
                   return (
@@ -322,7 +322,7 @@ export default function ApprovalCenter() {
         {/* Detail */}
         <div className="lg:col-span-8 xl:col-span-9 space-y-5">
           {!selected ? (
-            <EmptyState message="Selecione uma notícia gerada à esquerda." />
+            <EmptyState message="Selecione uma notícia gerada na lista." />
           ) : (
             <>
               {/* Summary stats bar */}
@@ -725,15 +725,15 @@ function PostDetailModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-2 sm:p-4 bg-black/50"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl"
+        className="w-full max-w-2xl max-h-[calc(100dvh-1rem)] sm:max-h-[90dvh] overflow-y-auto rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="sticky top-0 z-10 flex items-center justify-between gap-2 px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900">
+        <div className="sticky top-0 z-10 flex items-center justify-between gap-2 px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900">
           <div className="flex items-center gap-2">
             {isInstagram ? (
               <Instagram size={18} className={platformAccent} />
@@ -758,7 +758,7 @@ function PostDetailModal({
         </div>
 
         {/* Body */}
-        <div className="px-6 py-5 space-y-5">
+        <div className="px-4 sm:px-6 py-4 sm:py-5 space-y-5">
           {/* Headline */}
           {post.headline && (
             <div>
@@ -857,7 +857,7 @@ function PostDetailModal({
         </div>
 
         {/* Footer - approval action */}
-        <div className="sticky bottom-0 flex items-center justify-between gap-2 px-6 py-4 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900">
+        <div className="sticky bottom-0 flex flex-wrap items-center justify-between gap-2 px-4 sm:px-6 py-3 sm:py-4 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900">
           <div className="flex items-center gap-2">
             <Badge status={isApproved ? 'aprovado' : 'pendente'} />
             {post.created_at && (
